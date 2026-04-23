@@ -1,0 +1,20 @@
+{
+  "name": "leadgen",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace web",
+    "build:web": "npm run build --workspace web",
+    "lint:web": "npm run lint --workspace web",
+    "db:init": "tsx database/scripts/init.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.0",
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
