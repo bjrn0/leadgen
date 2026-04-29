@@ -112,6 +112,10 @@ export function SidebarGroup({ className, ...props }: React.ComponentProps<"div"
 }
 
 export function SidebarGroupLabel({ className, ...props }: React.ComponentProps<"div">) {
+  const { open } = useSidebar();
+
+  if (!open) return null;
+
   return (
     <div
       data-slot="sidebar-group-label"
@@ -151,7 +155,7 @@ export const SidebarMenuButton = React.forwardRef<
       className={cn(
         "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none transition-[width,height,padding]",
         isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
-        !open && "justify-center px-2",
+        !open && "justify-center px-2 [&>span]:hidden",
         className,
       )}
       {...props}

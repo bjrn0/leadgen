@@ -7,7 +7,7 @@ LeadGen is a go-to-market intelligence engine for two initial jobs:
 
 The repository is scaffolded as a monorepo:
 
-- `apps/web`: Next.js dashboard and operator UI
+- `app`: Next.js dashboard and operator UI
 - `database`: SQL schema and bootstrap scripts
 - `services/ingest`: Go polling and normalization service
 - `services/worker`: Go deep-processing and signal materialization service

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BadgeCheck,
@@ -30,6 +30,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -407,6 +408,19 @@ export function LeadGenerationView() {
   const [buyerFilter, setBuyerFilter] = useState("All");
   const [isIcpOpen, setIsIcpOpen] = useState(false);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsFiltersOpen(false);
+        setIsIcpOpen(false);
+      }
+    }
+    if (isFiltersOpen || isIcpOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isFiltersOpen, isIcpOpen]);
+
   const filteredLeads = useMemo(
     () =>
       leads.filter((lead) => {
@@ -562,15 +576,15 @@ export function LeadGenerationView() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.success("Added to your watchlist", { icon: <BellPlus className="h-4 w-4" /> })}>
                     <BellPlus className="h-4 w-4" />
                     Add to Watchlist
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.success("Pushed to your CRM", { icon: <DatabaseZap className="h-4 w-4" /> })}>
                     <DatabaseZap className="h-4 w-4" />
                     Push to CRM
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.error("Lead suppressed", { icon: <CircleSlash2 className="h-4 w-4" /> })}>
                     <CircleSlash2 className="h-4 w-4" />
                     Suppress
                   </Button>
@@ -619,7 +633,7 @@ export function LeadGenerationView() {
                             <span className="text-xs text-muted-foreground">{item.time}</span>
                           </div>
                           <p className="mt-2 leading-6 text-muted-foreground">{item.text}</p>
-                          <Button className="mt-3" size="sm" variant="ghost">
+                          <Button className="mt-3" size="sm" variant="ghost" onClick={() => toast.info("Opening evidence source…", { icon: <ArrowUpRight className="h-4 w-4" /> })}>
                             <ArrowUpRight className="h-4 w-4" />
                             Open Evidence
                           </Button>
@@ -642,7 +656,7 @@ export function LeadGenerationView() {
                           <div className="mt-1 text-sm text-muted-foreground">{contact.title}</div>
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                             <Badge variant="secondary">{contact.channel}</Badge>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => toast.success("Sequence started", { icon: <MailPlus className="h-4 w-4" /> })}>
                               <MailPlus className="h-4 w-4" />
                               Sequence
                             </Button>
@@ -658,15 +672,15 @@ export function LeadGenerationView() {
                       Batch Actions
                     </div>
                     <div className="space-y-2">
-                      <Button className="w-full justify-start" variant="outline">
+                      <Button className="w-full justify-start" variant="outline" onClick={() => toast.success("Marked as qualified", { icon: <CheckCircle2 className="h-4 w-4" /> })}>
                         <CheckCircle2 className="h-4 w-4" />
                         Mark as Qualified
                       </Button>
-                      <Button className="w-full justify-start" variant="outline">
+                      <Button className="w-full justify-start" variant="outline" onClick={() => toast.success("Watching similar companies", { icon: <BellPlus className="h-4 w-4" /> })}>
                         <BellPlus className="h-4 w-4" />
                         Watch Similar Companies
                       </Button>
-                      <Button className="w-full justify-start" variant="outline">
+                      <Button className="w-full justify-start" variant="outline" onClick={() => toast.success("Evidence exported", { icon: <DatabaseZap className="h-4 w-4" /> })}>
                         <DatabaseZap className="h-4 w-4" />
                         Export Selected Evidence
                       </Button>
@@ -680,7 +694,7 @@ export function LeadGenerationView() {
       </div>
 
       {isIcpOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={(event) => { if (event.target === event.currentTarget) setIsIcpOpen(false); }}>
           <Card className="max-h-[90vh] w-full max-w-3xl overflow-auto shadow-xl">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -727,19 +741,14 @@ export function LeadGenerationView() {
                   <Input defaultValue="COO, VP Ops, CTO" />
                 </label>
               </div>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium">
-                  <MessageSquareText className="h-4 w-4 text-[var(--brand)]" />
-                  Discovery Intent
-                </label>
+              <label className="space-y-2 text-sm font-medium">
+                Discovery Intent
                 <Textarea defaultValue="Find companies with public signals around operational bottlenecks, ERP modernization, delivery pressure, or transformation hiring in the last 14 days." />
-              </div>
-              <div className="mt-6 rounded-md border bg-muted/40 p-4">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-                  <BellPlus className="h-4 w-4 text-[var(--brand)]" />
-                  Notifications
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+              </label>
+              <div className="mt-4 space-y-2">
+                <div className="text-sm font-medium">Notifications</div>
+                <div className="rounded-md border bg-muted/40 p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-medium">
                     <span className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-[var(--brand)]" />
@@ -754,13 +763,14 @@ export function LeadGenerationView() {
                     </span>
                     <Input defaultValue="https://hooks.example.com/leadgen" />
                   </label>
+                  </div>
                 </div>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsIcpOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsIcpOpen(false)}>
+                <Button onClick={() => { toast.success("ICP rule created", { icon: <Plus className="h-4 w-4" /> }); setIsIcpOpen(false); }}>
                   <Plus className="h-4 w-4" />
                   Create Rule
                 </Button>
@@ -771,7 +781,7 @@ export function LeadGenerationView() {
       ) : null}
 
       {isFiltersOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={(event) => { if (event.target === event.currentTarget) setIsFiltersOpen(false); }}>
           <Card className="max-h-[90vh] w-full max-w-3xl overflow-auto shadow-xl">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -788,21 +798,30 @@ export function LeadGenerationView() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
-              <label className="space-y-2 text-sm font-medium">
-                Minimum fit score
-                <Input
-                  min={0}
-                  max={100}
-                  type="number"
-                  value={minFit}
-                  onChange={(event) => setMinFit(Number(event.target.value))}
-                />
-              </label>
-              <div className="space-y-4 rounded-md border bg-muted/30 p-4">
-                <FilterGroup label="Vertical" options={verticalOptions} value={verticalFilter} onChange={setVerticalFilter} />
-                <FilterGroup label="Region" options={regionOptions} value={regionFilter} onChange={setRegionFilter} />
-                <FilterGroup label="Company size" options={sizeOptions} value={sizeFilter} onChange={setSizeFilter} />
-                <FilterGroup label="Buyer focus" options={buyerOptions} value={buyerFilter} onChange={setBuyerFilter} />
+              <div className="space-y-2">
+                <div className="text-xs font-medium uppercase text-muted-foreground">Fit threshold</div>
+                <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <SlidersHorizontal className="h-4 w-4 text-[var(--brand)]" />
+                    Minimum fit score
+                  </div>
+                  <Input
+                    min={0}
+                    max={100}
+                    type="number"
+                    value={minFit}
+                    onChange={(event) => setMinFit(Number(event.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs font-medium uppercase text-muted-foreground">Discovery criteria</div>
+                <div className="space-y-4 rounded-md border bg-muted/30 p-4">
+                  <FilterGroup label="Vertical" options={verticalOptions} value={verticalFilter} onChange={setVerticalFilter} />
+                  <FilterGroup label="Region" options={regionOptions} value={regionFilter} onChange={setRegionFilter} />
+                  <FilterGroup label="Company size" options={sizeOptions} value={sizeFilter} onChange={setSizeFilter} />
+                  <FilterGroup label="Buyer focus" options={buyerOptions} value={buyerFilter} onChange={setBuyerFilter} />
+                </div>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
                 <Button
@@ -817,7 +836,7 @@ export function LeadGenerationView() {
                 >
                   Reset
                 </Button>
-                <Button onClick={() => setIsFiltersOpen(false)}>
+                <Button onClick={() => { toast.success("Filters applied", { icon: <Filter className="h-4 w-4" /> }); setIsFiltersOpen(false); }}>
                   <Filter className="h-4 w-4" />
                   Apply Filters
                 </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -28,6 +28,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -346,6 +347,19 @@ function sourceIcon(type: string) {
 export function MonitoringView() {
   const [selectedAccountId, setSelectedAccountId] = useState(accounts[0].id);
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAddAccountOpen(false);
+      }
+    }
+    if (isAddAccountOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isAddAccountOpen]);
+
   const visibleAccounts = accounts.slice(0, 5);
   const selectedAccount =
     visibleAccounts.find((account) => account.id === selectedAccountId) ??
@@ -483,11 +497,11 @@ export function MonitoringView() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.success("Task created", { icon: <UserPlus className="h-4 w-4" /> })}>
                     <UserPlus className="h-4 w-4" />
                     Create Task
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.info("Email draft opened", { icon: <Mail className="h-4 w-4" /> })}>
                     <Mail className="h-4 w-4" />
                     Draft Email
                   </Button>
@@ -567,7 +581,7 @@ export function MonitoringView() {
                     </div>
                     <div className="flex gap-2">
                       <Input placeholder="https://company.com/news/rss" />
-                      <Button size="icon" variant="outline" aria-label="Add source">
+                      <Button size="icon" variant="outline" aria-label="Add source" onClick={() => toast.success("Source added", { icon: <Plus className="h-4 w-4" /> })}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -592,11 +606,11 @@ export function MonitoringView() {
                   <div className="space-y-3">
                     <Textarea defaultValue={`Subject: ${selectedAccount.name} - delivery pressure and supplier execution\n\nNoticed the recent signals around execution capacity and platform coordination. Worth comparing notes on where external engineering support could remove delivery bottlenecks.`} />
                     <div className="flex flex-wrap gap-2">
-                      <Button>
+                      <Button onClick={() => toast.success("Outreach started", { icon: <Mail className="h-4 w-4" /> })}>
                         <Mail className="h-4 w-4" />
                         Start Outreach
                       </Button>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={() => toast.success("Logged in CRM", { icon: <DatabaseZap className="h-4 w-4" /> })}>
                         <DatabaseZap className="h-4 w-4" />
                         Log in CRM
                       </Button>
@@ -610,7 +624,7 @@ export function MonitoringView() {
       </div>
 
       {isAddAccountOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={(event) => { if (event.target === event.currentTarget) setIsAddAccountOpen(false); }}>
           <Card className="max-h-[90vh] w-full max-w-3xl overflow-auto shadow-xl">
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
@@ -626,7 +640,7 @@ export function MonitoringView() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium">
                   Account Name
@@ -641,11 +655,13 @@ export function MonitoringView() {
                 Sources
                 <Textarea defaultValue="Newsroom RSS, careers page, executive blog, YouTube channel" />
               </label>
-              <div className="rounded-md border bg-muted/40 p-4">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-                  <Bell className="h-4 w-4 text-[var(--brand)]" />
-                  Notifications
-                </div>
+              <div className="mt-4 space-y-2">
+                <div className="text-sm font-medium">Alert routing</div>
+                <div className="rounded-md border bg-muted/40 p-4">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+                    <Bell className="h-4 w-4 text-[var(--brand)]" />
+                    Notifications
+                  </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-medium">
                     <span className="flex items-center gap-2">
@@ -661,13 +677,14 @@ export function MonitoringView() {
                     </span>
                     <Input defaultValue="https://hooks.example.com/watchlist" />
                   </label>
+                  </div>
                 </div>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddAccountOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsAddAccountOpen(false)}>
+                <Button onClick={() => { toast.success("Account added to watchlist", { icon: <FolderPlus className="h-4 w-4" /> }); setIsAddAccountOpen(false); }}>
                   <FolderPlus className="h-4 w-4" />
                   Add Account
                 </Button>
