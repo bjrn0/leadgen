@@ -1,0 +1,712 @@
+{
+  "generated_at": "2026-06-09T17:21:36.172Z",
+  "entities": [
+    {
+      "entity_id": "3cd62799-dfb3-4f85-9334-b592e8b7917b",
+      "ingest_key": "person:tim-cook",
+      "type": "person",
+      "name": "Tim Cook",
+      "profile": {
+        "tier": "Strategic",
+        "title": "CEO",
+        "region": "US",
+        "cadence": "*/30 * * * *",
+        "company": "Apple",
+        "seed_urls": [
+          "https://www.apple.com/newsroom/"
+        ],
+        "notifications": {
+          "email": true,
+          "webhook": false
+        }
+      },
+      "monitoring": {
+        "id": "3cd62799-dfb3-4f85-9334-b592e8b7917b",
+        "name": "Tim Cook",
+        "tier": "Strategic",
+        "urgency": "Medium",
+        "score": 96,
+        "sources": 1,
+        "latest": "2026-06-09T00:00:00+00:00",
+        "notifications": {
+          "email": true,
+          "webhook": false
+        },
+        "summary": "The new Apple Intelligence and Siri features will be available in beta next month and roll out to all users in the fall.",
+        "signals": [
+          {
+            "time": "2026-06-09 00:00",
+            "type": "product_launch",
+            "title": "Apple Intelligence and new Siri features to launch in beta next month, full release this fall",
+            "urgency": "Medium",
+            "evidence": "Timing provides a window to prepare for integration, testing, or marketing alignment with Apple’s release schedule."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "technology_change",
+            "title": "Apple Intelligence rollout delayed, but major improvements announced",
+            "urgency": "Medium",
+            "evidence": "Apple is actively addressing competitive gaps in AI, signaling a renewed focus on catching up and leading in responsible AI innovation."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "product_launch",
+            "title": "Apple unveils next-generation Siri with advanced AI capabilities",
+            "urgency": "Medium",
+            "evidence": "The new Siri represents a strategic push to enhance user engagement through AI, indicating increased investment in intelligent assistant technology and ecosystem integration."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "executive_change",
+            "title": "Tim Cook to step down as Apple CEO in September, handing role to John Ternus",
+            "urgency": "High",
+            "evidence": "A major leadership transition is imminent, which could shift strategic priorities. Engaging with Cook now offers a chance to influence direction before the handover."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "product_launch",
+            "title": "Apple unveils next-generation Siri with advanced AI capabilities under Tim Cook’s final WWDC",
+            "urgency": "Medium",
+            "evidence": "The enhanced AI functionality represents a strategic push to close the gap with competitors and reinforce Apple’s position in the AI race, likely influencing developer and enterprise adoption."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "technology_change",
+            "title": "Apple Intelligence rollout signals renewed focus on AI with privacy and usability at the core",
+            "urgency": "Medium",
+            "evidence": "Apple’s approach to AI could set industry standards for privacy-conscious innovation, affecting how third-party developers and enterprise partners design for the Apple ecosystem."
+          },
+          {
+            "time": "2026-06-09 00:00",
+            "type": "executive_change",
+            "title": "Tim Cook to step down as Apple CEO in September, handing role to John Ternus",
+            "urgency": "High",
+            "evidence": "A major leadership transition is imminent, which could influence strategic direction, partner engagements, and internal decision-making at Apple."
+          },
+          {
+            "time": "2026-06-08 00:00",
+            "type": "product_launch",
+            "title": "Tim Cook dedicates the new Steve Jobs Theater",
+            "urgency": "Low",
+            "evidence": "Shows Tim Cook's role in major Apple milestones and campus initiatives, highlighting leadership in company culture and infrastructure."
+          }
+        ]
+      },
+      "insights": [
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook transitions from CEO to Executive Chairman of Apple",
+          "summary": "Tim Cook will step down as CEO of Apple and assume the role of Executive Chairman of the Board of Directors effective September 1, 2026, marking a major leadership transition at the company.",
+          "why_it_matters": "This shift indicates a strategic move toward long-term governance and policy engagement, freeing Cook from day-to-day operations while maintaining his influence at the highest level of the company.",
+          "recommended_action": "Engage Tim Cook in discussions related to policy, sustainability, or strategic partnerships, as his new role focuses on high-level company engagement, particularly with global policymakers.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Apple announced that Tim Cook will become executive chairman of Apple’s board of directors and John Ternus, senior vice president of Hardware Engineering, will become Apple’s next chief executive officer effective on September 1, 2026.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            },
+            {
+              "excerpt": "As executive chairman, Cook will assist with certain aspects of the company, including engaging with policymakers around the world.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook prioritized privacy, sustainability, and inclusion during his leadership",
+          "summary": "Cook has championed privacy as a fundamental human right, reduced Apple’s carbon footprint by over 60% since 2015, and emphasized accessibility and belonging within the company.",
+          "why_it_matters": "These values are deeply embedded in Apple’s culture and decision-making. Sales pitches that align with these principles will be more persuasive.",
+          "recommended_action": "Frame product or service offerings around privacy-by-design, environmental sustainability, and accessibility features. Avoid positioning anything that could be seen as conflicting with these core values.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Cook, who has long advocated for privacy as a fundamental human right, has made privacy and security imperative at Apple, setting a standard for user protection that continues to set the company apart from the rest of the technology industry.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            },
+            {
+              "excerpt": "Under his leadership, the company reduced its carbon footprint by more than 60 percent below 2015 levels during a period in which revenue nearly doubled.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            },
+            {
+              "excerpt": "And he has made central to his leadership the notion that Apple should be a place where everyone can feel they belong and where everyone is treated with dignity and respect.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook remains deeply involved in Apple's future through transition",
+          "summary": "Cook will continue as CEO through the summer of 2026, working closely with incoming CEO John Ternus to ensure a smooth leadership handover.",
+          "why_it_matters": "The overlap period provides stability and indicates Cook’s ongoing operational influence until the transition is complete.",
+          "recommended_action": "Target outreach or product discussions before September 1, 2026, if seeking Cook’s direct input on strategic initiatives or product direction.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Cook will continue in his role as CEO through the summer as he works closely with Ternus on a smooth transition.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook emphasizes continuity and confidence in Apple's leadership future",
+          "summary": "Cook publicly expressed full confidence in John Ternus as his successor, calling him a visionary leader with integrity and deep innovation credentials.",
+          "why_it_matters": "Cook’s endorsement signals strong internal alignment and stability, reducing uncertainty around the leadership change.",
+          "recommended_action": "Leverage Cook’s stated values—integrity, innovation, user enrichment—in messaging to align with Apple’s ongoing cultural priorities.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "Low",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "John Ternus has the mind of an engineer, the soul of an innovator, and the heart to lead with integrity and with honor. He is a visionary whose contributions to Apple over 25 years are already too numerous to count, and he is without question the right person to lead Apple into the future.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Tim Cook oversaw major product and service expansions during his tenure",
+          "summary": "Under Tim Cook’s leadership, Apple introduced new product categories including Apple Watch, AirPods, and Apple Vision Pro, and expanded services such as Apple Pay, Apple Music, and iCloud into a $100+ billion business.",
+          "why_it_matters": "Cook has a proven track record of backing transformative product and service innovations. His continued influence as Executive Chairman suggests ongoing strategic investment in these areas.",
+          "recommended_action": "Highlight alignment with Apple’s core growth areas—wearables, health tech, services, and accessibility—when pitching solutions. Emphasize privacy, sustainability, and inclusivity to resonate with Cook’s stated values.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "He became CEO in 2011 and has overseen the introduction of numerous products and services, including new categories like Apple Watch, AirPods, and Apple Vision Pro, and services ranging from iCloud and Apple Pay to Apple TV and Apple Music.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            },
+            {
+              "excerpt": "Apple Services has been a major focus area of Cook’s, and during his tenure the category has grown to become a more than $100 billion business",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook instrumental in Apple’s transition to Apple-designed silicon",
+          "summary": "Cook led Apple’s strategic shift to in-house silicon, resulting in major gains in performance and power efficiency across product lines.",
+          "why_it_matters": "This highlights Cook’s deep commitment to vertical integration and technological self-reliance, which will likely continue under his executive chairmanship.",
+          "recommended_action": "When engaging with Apple leadership, emphasize solutions that support or integrate with Apple’s silicon ecosystem and its performance, security, and efficiency goals.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Under Cook’s leadership, Apple also transitioned to Apple-designed silicon, enabling the company to own more of its primary technology and deliver industry-leading gains in power efficiency and performance that directly benefit users across its products.",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook dismisses speculation about stepping down as Apple CEO",
+          "summary": "Tim Cook stated he has no plans to leave Apple, expressing deep love for his work and inability to imagine life without the company.",
+          "why_it_matters": "Provides clarity on leadership stability, which is critical for long-term planning and investor confidence.",
+          "recommended_action": "Proceed with long-term engagement strategies involving Apple leadership, knowing Cook intends to remain in role.",
+          "recency_label": "85 days ago",
+          "published_at": "2026-03-17T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Low",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "As for his future at Apple, Cook dismissed speculation about stepping down, noting, \"I love what I do deeply.\"",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            },
+            {
+              "excerpt": "Twenty-eight years ago, I walked into Apple and I've loved every day of it since... I can't imagine life without Apple.",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            }
+          ],
+          "created_at": "2026-06-09T17:10:51.255778+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook gives final WWDC introduction as Apple CEO",
+          "summary": "Tim Cook delivered his last introduction and welcome at WWDC 26, marking the end of his tenure as Apple's CEO. He gave a tearful goodbye to developers, thanking them for their support throughout his leadership.",
+          "why_it_matters": "This signals a major leadership transition at Apple, creating opportunities for sales engagement around upcoming changes in strategy, priorities, or product direction under new leadership.",
+          "recommended_action": "Reach out to Apple partners or enterprise clients to discuss potential implications of the CEO transition on future product roadmaps and procurement decisions.",
+          "recency_label": "2 days ago",
+          "published_at": "2026-06-08T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "After being introduced by Craig Federighi, Tim Cook gives a tearful final Good Morning to developers at WWDC 26, and thanks them for their support over his time as CEO.",
+              "source_url": "https://www.youtube.com/watch?v=UhGals1u8kU",
+              "published_at": "2026-06-08"
+            },
+            {
+              "excerpt": "Apple's presumed next event, the iPhone event in the fall, will be the first to be introduced by incoming CEO John Ternus.",
+              "source_url": "https://www.youtube.com/watch?v=UhGals1u8kU",
+              "published_at": "2026-06-08"
+            }
+          ],
+          "created_at": "2026-06-09T17:12:31.791919+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Tim Cook dedicates the new Steve Jobs Theater",
+          "summary": "Tim Cook dedicated Apple's new Steve Jobs Theater, indicating a significant company event or campus development.",
+          "why_it_matters": "Shows Tim Cook's role in major Apple milestones and campus initiatives, highlighting leadership in company culture and infrastructure.",
+          "recommended_action": "Reference Cook’s dedication of the Steve Jobs Theater when discussing Apple’s long-term vision or campus innovation in outreach.",
+          "recency_label": "unknown",
+          "published_at": "2026-06-08T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Low",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Apple's Tim Cook dedicates the new Steve Jobs Theater (CNET News)",
+              "source_url": "https://www.youtube.com/watch?v=KENk9AZNQzM&pp=ugUEEgJlbg%3D%3D",
+              "published_at": "8 years ago"
+            }
+          ],
+          "created_at": "2026-06-09T17:12:31.791919+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook to step down as Apple CEO in September, handing role to John Ternus",
+          "summary": "Tim Cook will step down as Apple's CEO in September, with John Ternus taking over. This WWDC marks Cook's final one as CEO.",
+          "why_it_matters": "A major leadership transition is imminent, which could shift strategic priorities. Engaging with Cook now offers a chance to influence direction before the handover.",
+          "recommended_action": "Reach out to Apple leadership contacts soon to discuss partnerships or integrations while Cook is still in charge.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "This will be the last one with current CEO Tim Cook.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "Apple's Worldwide Developers Conference Monday the last one featuring CEO Tim Cook before he turns his post over to John Ternus in September.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:14:41.813199+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Apple unveils next-generation Siri with advanced AI capabilities",
+          "summary": "Apple introduced a significantly upgraded Siri powered by Apple Intelligence, featuring personal context understanding, on-screen awareness, image understanding, and broader world knowledge.",
+          "why_it_matters": "The new Siri represents a strategic push to enhance user engagement through AI, indicating increased investment in intelligent assistant technology and ecosystem integration.",
+          "recommended_action": "Explore opportunities to align products or services with Apple’s AI roadmap, especially around Siri integrations or privacy-first AI use cases.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "The company debuted the next generation of Apple Intelligence and Siri and other meaningful improvements that they hope will help users' everyday lives.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "Siri is now a profoundly more capable assistant that helps you find what you need and gets more done.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "Like by saying, 'Hey Siri.' This includes personal context understanding, app actions, on-screen awareness, image understanding, and access to broad world knowledge.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:14:41.813199+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Apple Intelligence and new Siri features to launch in beta next month, full release this fall",
+          "summary": "The new Apple Intelligence and Siri features will be available in beta next month and roll out to all users in the fall.",
+          "why_it_matters": "Timing provides a window to prepare for integration, testing, or marketing alignment with Apple’s release schedule.",
+          "recommended_action": "Plan beta testing or developer access strategies now to be ready for the upcoming release cycle.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "The new Apple Intelligence and Siri features will roll out in beta next month and for all users in the fall.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:14:41.813199+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook to step down as Apple CEO in September, handing role to John Ternus",
+          "summary": "This will be Tim Cook's last Worldwide Developers Conference before he transitions out of the CEO role in September, marking the end of his 15-year tenure leading Apple.",
+          "why_it_matters": "A major leadership transition is imminent, which could influence strategic direction, partner engagements, and internal decision-making at Apple.",
+          "recommended_action": "Initiate conversations with Apple contacts before Cook's departure to understand transition plans and identify new points of contact for future engagements.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "This will be the last one featuring CEO Tim Cook before he turns his post over to John Ternus in September.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "This will be the last one with current CEO Tim Cook.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:09:42.204901+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Apple unveils next-generation Siri with advanced AI capabilities under Tim Cook’s final WWDC",
+          "summary": "Apple introduced a significantly upgraded Siri powered by Apple Intelligence, featuring personal context understanding, on-screen awareness, and deeper app integration—announced during Tim Cook’s final WWDC as CEO.",
+          "why_it_matters": "The enhanced AI functionality represents a strategic push to close the gap with competitors and reinforce Apple’s position in the AI race, likely influencing developer and enterprise adoption.",
+          "recommended_action": "Evaluate how the new Siri and Apple Intelligence features can be leveraged in your product integrations or customer solutions ahead of the fall rollout.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "The company debuted the next generation of Apple Intelligence and Siri and other meaningful improvements that they hope will help users' everyday lives.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "Siri is now a profoundly more capable assistant that helps you find what you need and gets more done.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:09:42.204901+00:00"
+        },
+        {
+          "signal_type": "technology_change",
+          "headline": "Apple Intelligence rollout signals renewed focus on AI with privacy and usability at the core",
+          "summary": "Apple is rolling out Apple Intelligence in beta next month, with a full release expected in the fall, emphasizing responsible AI use, privacy, and day-to-day utility—key themes highlighted during Tim Cook’s final major product presentation.",
+          "why_it_matters": "Apple’s approach to AI could set industry standards for privacy-conscious innovation, affecting how third-party developers and enterprise partners design for the Apple ecosystem.",
+          "recommended_action": "Prepare for the Apple Intelligence beta release by exploring documentation and developer tools to align your offerings with Apple’s new AI framework.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Apple unveiled new artificial intelligence features with a focus on privacy and day-to-day at its annual developers' conference",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            },
+            {
+              "excerpt": "The new Apple Intelligence and Siri features will roll out in beta next month and for all users in the fall.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:09:42.204901+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Apple to expand U.S. manufacturing with iPhone glass from Kentucky and chips from Arizona",
+          "summary": "Tim Cook announced that iPhone front and back glass will be produced in Kentucky by end of year, and over 100 million system-on-a-chip units will be made in Arizona this year, signaling major U.S. manufacturing expansion.",
+          "why_it_matters": "Indicates Apple's growing domestic production footprint, which could influence supply chain partnerships, investor sentiment, and government relations.",
+          "recommended_action": "Engage Apple's procurement or government affairs teams to explore opportunities in domestic manufacturing or supplier networks.",
+          "recency_label": "85 days ago",
+          "published_at": "2026-03-17T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "if you looked at your iPhone today, the front cover and the back cover, all of that glass will be coming out of Kentucky by the end of this year.",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            },
+            {
+              "excerpt": "The engine, the system on a chip, we're gonna make over 100 million of those in Arizona this year.",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            }
+          ],
+          "created_at": "2026-06-09T17:10:51.255778+00:00"
+        },
+        {
+          "signal_type": "technology_change",
+          "headline": "Apple investing $600 billion in U.S. over next four years",
+          "summary": "Tim Cook stated Apple will invest $600 billion in the United States over the next four years, covering domestic manufacturing and semiconductor production for global iPhone supply.",
+          "why_it_matters": "Massive economic commitment signals long-term U.S. strategic focus, potentially affecting policy, partnerships, and infrastructure development.",
+          "recommended_action": "Monitor for public-private partnership opportunities or policy advocacy openings related to tech manufacturing and innovation.",
+          "recency_label": "85 days ago",
+          "published_at": "2026-03-17T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "We're putting $600 billion into the U.S. over the next four years",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            }
+          ],
+          "created_at": "2026-06-09T17:10:51.255778+00:00"
+        },
+        {
+          "signal_type": "partnership",
+          "headline": "Apple nearly doubling reach of Save The Music partnership",
+          "summary": "Apple is expanding its partnership with Save The Music to nearly double the number of schools served, aiming to reach 25,000 students with music education next year.",
+          "why_it_matters": "Shows continued corporate investment in education and creative technology, reinforcing brand values and community engagement.",
+          "recommended_action": "Explore collaboration opportunities with Apple in education technology or music programs, especially in underserved communities.",
+          "recency_label": "85 days ago",
+          "published_at": "2026-03-17T00:00:00+00:00",
+          "confidence": 0.95,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "We're expanding the number of schools that we're reaching from 25 to almost double that. And so we're gonna be able to hit 25,000 kids next year -- with music education",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            }
+          ],
+          "created_at": "2026-06-09T17:10:51.255778+00:00"
+        },
+        {
+          "signal_type": "technology_change",
+          "headline": "Apple Intelligence rollout delayed, but major improvements announced",
+          "summary": "Apple acknowledged shortcomings in its initial AI rollout and is introducing significant updates to improve safety, functionality, and usability of AI features like image editing, plan generation, and search.",
+          "why_it_matters": "Apple is actively addressing competitive gaps in AI, signaling a renewed focus on catching up and leading in responsible AI innovation.",
+          "recommended_action": "Position your solution as complementary to Apple’s responsible AI strategy, particularly in areas like privacy, content generation, or workflow automation.",
+          "recency_label": "17 hr ago",
+          "published_at": "2026-06-09T00:00:00+00:00",
+          "confidence": 0.9,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "Apple acknowledged that they fell short with their previous rollout of AI, but expert Mark Vena says changes to how it can be safely used to edit and generate pictures, create customized plans, and search for answers is a step forward.",
+              "source_url": "https://www.youtube.com/watch?v=m2yiEmrhifc",
+              "published_at": "2026-06-09"
+            }
+          ],
+          "created_at": "2026-06-09T17:14:41.813199+00:00"
+        },
+        {
+          "signal_type": "product_launch",
+          "headline": "Apple expanding AI capabilities with Private Cloud Compute infrastructure",
+          "summary": "Tim Cook described Apple's Private Cloud Compute as a secure, device-like cloud system for handling AI queries when on-device processing isn't sufficient.",
+          "why_it_matters": "Reveals Apple's secure-by-design approach to AI, differentiating it from competitors and signaling investment in privacy-preserving AI infrastructure.",
+          "recommended_action": "Position privacy-first AI solutions or services that align with Apple's on-device and encrypted cloud model.",
+          "recency_label": "85 days ago",
+          "published_at": "2026-03-17T00:00:00+00:00",
+          "confidence": 0.9,
+          "urgency": "Medium",
+          "actionable": true,
+          "quality": "ok",
+          "evidence": [
+            {
+              "excerpt": "when we can't answer a question on your device, we send it to something called Private Cloud Compute, which is essentially, think of it as a big device in the sky that has the same kind of security and architecture as your phone.",
+              "source_url": "https://www.goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+              "published_at": "2026-03-17"
+            }
+          ],
+          "created_at": "2026-06-09T17:10:51.255778+00:00"
+        },
+        {
+          "signal_type": "executive_change",
+          "headline": "Tim Cook to transition from CEO to Executive Chairman of Apple",
+          "summary": "Tim Cook will step down as CEO of Apple and assume the role of Executive Chairman, effective September 1, 2026. This marks a significant leadership transition at the company.",
+          "why_it_matters": "As Cook moves into a strategic oversight role, sales teams should anticipate shifts in decision-making dynamics and prepare to engage with new executive leadership, particularly incoming CEO John Ternus. This transition may open new relationship-building opportunities.",
+          "recommended_action": "Update stakeholder maps to reflect Cook’s new role as Executive Chairman and identify key decision-makers under the new CEO. Position long-term strategic discussions with Cook around vision and values, while operational discussions shift to Ternus and the new executive team.",
+          "recency_label": "unknown",
+          "published_at": "2026-04-20T00:00:00+00:00",
+          "confidence": 1,
+          "urgency": "High",
+          "actionable": true,
+          "quality": "low",
+          "evidence": [
+            {
+              "excerpt": "Tim Cook to become Apple executive chairman, John Ternus to become Apple CEO",
+              "source_url": "https://www.apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo/",
+              "published_at": "unknown"
+            }
+          ],
+          "created_at": "2026-06-09T17:08:39.6183+00:00"
+        }
+      ],
+      "findings": [
+        {
+          "canonical_url": "https://youtube.com/watch?v=m2yiEmrhifc",
+          "title": "Tim Cook unveils all-new Siri showing off new AI features at WWDC in major Apple update - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:13:33.231+00:00",
+          "dedup_status": "changed"
+        },
+        {
+          "canonical_url": "https://apple.com/newsroom",
+          "title": "Newsroom - Apple",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:12:43.067067+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://apnews.com/hub/tim-cook",
+          "title": "Tim Cook | AP News",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:12:32.960577+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/watch?v=UhGals1u8kU",
+          "title": "Tim Cook’s final introduction and welcome at WWDC 26 with standing ovation - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:11:20.659463+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://nbcnews.com/video/shorts/tim-cook-appears-at-last-event-as-apple-ceo-264750149705",
+          "title": "Tim Cook appears at last event as Apple CEO",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:11:12.278892+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/shorts/cKX6pX0hErk",
+          "title": "Tim Cook concludes his last Worldwide Developers Conference as Apple CEO - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:11:03.083875+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://time.com/6099169/tim-cook-apple-privacy",
+          "title": "Apple CEO Tim Cook on What Technology Excites Him Most",
+          "published_at": "2021-09-19T10:50:52+00:00",
+          "observed_at": "2026-06-09T17:10:54.242301+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/watch?v=ueOCRxZQ8xY",
+          "title": "I Interviewed Tim Cook (What He Told Me Matters) - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:10:52.31717+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://goodmorningamerica.com/culture/story/tim-cook-talks-apples-50th-anniversary-future-ai-131137939",
+          "title": "Tim Cook talks Apple's 50th anniversary, future of AI and privacy - Good Morning America",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:09:58.425099+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/watch?v=u9Sy3qwthCw",
+          "title": "Tim Cook Steps Down: The Man Who Made Apple a $3 TRILLION Empire - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:09:53.078093+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/watch?v=xLqUXIwPGUo",
+          "title": "Extended interview: Tim Cook - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:09:43.880325+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://businesswire.com/news/home/20260420318241/en/Tim-Cook-to-become-Apple-Executive-Chairman-John-Ternus-to-become-Apple-CEO",
+          "title": "Tim Cook to become Apple Executive Chairman; John Ternus to become Apple CEO",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:09:42.996917+00:00",
+          "dedup_status": "duplicate"
+        },
+        {
+          "canonical_url": "https://whitehouse.gov/gallery/president-donald-trump-delivers-investment-remarks-alongside-apple-ceo-tim-cook",
+          "title": "President Donald Trump delivers investment remarks alongside Apple CEO Tim Cook – The White House",
+          "published_at": "2025-12-02T22:18:24+00:00",
+          "observed_at": "2026-06-09T17:08:43.481992+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://youtube.com/watch?v=TsJy66DKWV4",
+          "title": "BREAKING: Apple announces Tim Cook to step aside as CEO - YouTube",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:08:40.727329+00:00",
+          "dedup_status": "new"
+        },
+        {
+          "canonical_url": "https://apple.com/newsroom/2026/04/tim-cook-to-become-apple-executive-chairman-john-ternus-to-become-apple-ceo",
+          "title": "Tim Cook to become Apple Executive Chairman John Ternus to become Apple CEO - Apple",
+          "published_at": null,
+          "observed_at": "2026-06-09T17:06:51.361658+00:00",
+          "dedup_status": "new"
+        }
+      ]
+    }
+  ]
+}

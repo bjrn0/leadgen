@@ -1,0 +1,50 @@
+{
+  "entities": [
+    {
+      "type": "person",
+      "name": "Tim Cook",
+      "ingest_key": "person:tim-cook",
+      "title": "CEO",
+      "company": "Apple",
+      "region": "US",
+      "tier": "Strategic",
+      "seed_urls": ["https://www.apple.com/newsroom/"],
+      "cadence": "*/30 * * * *",
+      "notifications": { "email": true, "webhook": false }
+    },
+    {
+      "type": "person",
+      "name": "Jensen Huang",
+      "ingest_key": "person:jensen-huang",
+      "title": "CEO",
+      "company": "NVIDIA",
+      "region": "US",
+      "tier": "Strategic",
+      "seed_urls": ["https://nvidianews.nvidia.com/"],
+      "cadence": "0 * * * *",
+      "notifications": { "email": true, "webhook": false }
+    },
+    {
+      "type": "person",
+      "name": "Elon Musk",
+      "ingest_key": "person:elon-musk",
+      "title": "CEO",
+      "company": "Tesla",
+      "region": "US",
+      "tier": "Strategic",
+      "seed_urls": [],
+      "cadence": "0 * * * *",
+      "notifications": { "email": true, "webhook": true }
+    },
+    {
+      "type": "company",
+      "name": "NVIDIA",
+      "ingest_key": "company:nvidia",
+      "region": "US",
+      "tier": "Strategic",
+      "seed_urls": ["https://nvidianews.nvidia.com/"],
+      "cadence": "0 * * * *",
+      "notifications": { "email": true, "webhook": true }
+    }
+  ]
+}
