@@ -30,7 +30,7 @@ export async function triggerBootstrap(
     return null;
   }
   // Imported lazily so the SDK isn't required when triggering is disabled.
-  const { tasks } = await import("@trigger.dev/sdk/v3");
+  const { tasks } = await import("@trigger.dev/sdk");
   const handle = await tasks.trigger("bootstrap-entity", { record });
   return { id: handle.id };
 }

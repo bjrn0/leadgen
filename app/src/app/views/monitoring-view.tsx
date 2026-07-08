@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMonitoring, useAddEntity, type CreateEntityInput } from "@/lib/monitoring";
 import {
   AlertTriangle,
-  ArrowRight,
   Bell,
   BriefcaseBusiness,
   CalendarClock,
@@ -39,273 +39,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-
-const accounts = [
-  {
-    id: "bmw",
-    name: "BMW Group",
-    tier: "Strategic",
-    urgency: "High",
-    score: 91,
-    sources: 12,
-    latest: "18 min ago",
-    notifications: { email: true, webhook: true },
-    summary:
-      "EV battery partnership, logistics hiring, and supplier diversification messaging point to active execution pressure.",
-    actions: [
-      "Email VP Supply Chain with battery logistics context.",
-      "Create CRM task for German automotive account owner.",
-      "Attach supplier-diversification evidence to outreach history.",
-    ],
-    signals: [
-      {
-        type: "Newsroom",
-        time: "Today 11:24",
-        title: "EV battery partnership announced",
-        evidence:
-          "Announcement highlights supplier onboarding, logistics coordination, and cross-region delivery targets.",
-        urgency: "High",
-      },
-      {
-        type: "Careers",
-        time: "Today 09:41",
-        title: "Three logistics engineering roles opened",
-        evidence:
-          "Roles mention integration ownership across procurement, delivery operations, and platform tooling.",
-        urgency: "Medium",
-      },
-      {
-        type: "Blog",
-        time: "Today 08:10",
-        title: "Supplier diversification update",
-        evidence:
-          "Operations post frames supplier resilience as a board-level transformation theme.",
-        urgency: "Medium",
-      },
-    ],
-    sourcesList: ["Newsroom RSS", "Careers page", "YouTube channel", "Executive blog"],
-  },
-  {
-    id: "clientx",
-    name: "Client X",
-    tier: "Expansion",
-    urgency: "Medium",
-    score: 78,
-    sources: 8,
-    latest: "43 min ago",
-    notifications: { email: true, webhook: false },
-    summary:
-      "Product integration notes and new implementation hiring suggest a near-term expansion conversation.",
-    actions: [
-      "Send customer-success note about implementation bandwidth.",
-      "Log expansion trigger in CRM.",
-      "Watch next release notes for integration delays.",
-    ],
-    signals: [
-      {
-        type: "Release notes",
-        time: "Today 10:58",
-        title: "Partner API update delayed",
-        evidence:
-          "Release notes moved partner API rollout by two weeks and cited dependency management.",
-        urgency: "Medium",
-      },
-      {
-        type: "Careers",
-        time: "Yesterday 17:30",
-        title: "Implementation manager role reposted",
-        evidence:
-          "Role includes ownership for rollout planning, partner coordination, and enterprise onboarding.",
-        urgency: "Medium",
-      },
-      {
-        type: "Customer webinar",
-        time: "Yesterday 12:05",
-        title: "Customer onboarding throughput mentioned",
-        evidence:
-          "Operator described onboarding volume as the limiting factor for new account activation.",
-        urgency: "Low",
-      },
-    ],
-    sourcesList: ["Release notes", "Customer webinar", "Careers page", "Support changelog"],
-  },
-  {
-    id: "prospecty",
-    name: "Prospect Y",
-    tier: "Nurture",
-    urgency: "Low",
-    score: 64,
-    sources: 5,
-    latest: "2 hr ago",
-    notifications: { email: false, webhook: true },
-    summary:
-      "Weak but relevant signals around platform consolidation and executive hiring remain worth tracking.",
-    actions: [
-      "Keep in daily digest.",
-      "Wait for executive hire or funding signal before outreach.",
-      "Maintain suppression check for existing partner conflict.",
-    ],
-    signals: [
-      {
-        type: "Podcast",
-        time: "Today 09:02",
-        title: "CTO discussed platform consolidation",
-        evidence:
-          "Conversation referenced fragmented internal tooling, but no project timeline was disclosed.",
-        urgency: "Low",
-      },
-      {
-        type: "Blog",
-        time: "Yesterday 15:44",
-        title: "Engineering operating model update",
-        evidence:
-          "Post describes stronger delivery rituals and ownership across shared services.",
-        urgency: "Low",
-      },
-      {
-        type: "News",
-        time: "2 days ago",
-        title: "Regional office expansion",
-        evidence:
-          "Expansion appears sales-led; operational impact remains unconfirmed.",
-        urgency: "Low",
-      },
-    ],
-    sourcesList: ["Podcast feed", "Engineering blog", "News alerts", "Careers page"],
-  },
-  {
-    id: "northstar",
-    name: "Northstar Foods",
-    tier: "Strategic",
-    urgency: "Medium",
-    score: 73,
-    sources: 7,
-    latest: "3 hr ago",
-    notifications: { email: true, webhook: true },
-    summary:
-      "Supplier onboarding and warehouse software mentions suggest a possible operations modernization window.",
-    actions: [
-      "Monitor supplier onboarding language for stronger pain signals.",
-      "Prepare food logistics proof points.",
-      "Create a reminder for next digest review.",
-    ],
-    signals: [
-      {
-        type: "Careers",
-        time: "Today 08:22",
-        title: "Warehouse systems analyst role opened",
-        evidence:
-          "Role references vendor data, warehouse workflows, and reporting reliability.",
-        urgency: "Medium",
-      },
-      {
-        type: "Blog",
-        time: "Yesterday 14:15",
-        title: "Supplier onboarding process updated",
-        evidence:
-          "Operations post describes new onboarding controls for regional suppliers.",
-        urgency: "Medium",
-      },
-      {
-        type: "News",
-        time: "2 days ago",
-        title: "New distribution center announced",
-        evidence:
-          "Announcement mentions increased operational complexity across distribution regions.",
-        urgency: "Low",
-      },
-    ],
-    sourcesList: ["Careers page", "Operations blog", "News alerts", "Supplier portal"],
-  },
-  {
-    id: "aeroline",
-    name: "AeroLine Components",
-    tier: "Nurture",
-    urgency: "Low",
-    score: 58,
-    sources: 6,
-    latest: "5 hr ago",
-    notifications: { email: false, webhook: true },
-    summary:
-      "Engineering updates are relevant but not urgent enough for immediate outreach.",
-    actions: [
-      "Keep in weekly digest.",
-      "Watch for executive or funding changes.",
-      "Do not trigger outbound yet.",
-    ],
-    signals: [
-      {
-        type: "Blog",
-        time: "Today 07:35",
-        title: "Engineering process note published",
-        evidence:
-          "Post mentions tooling consolidation without a clear operational deadline.",
-        urgency: "Low",
-      },
-      {
-        type: "Careers",
-        time: "Yesterday 10:02",
-        title: "Backend developer role opened",
-        evidence:
-          "Role is generic and does not clearly imply transformation pressure.",
-        urgency: "Low",
-      },
-      {
-        type: "News",
-        time: "3 days ago",
-        title: "Component partnership renewed",
-        evidence:
-          "Partnership renewal has limited new buying-intent evidence.",
-        urgency: "Low",
-      },
-    ],
-    sourcesList: ["Engineering blog", "Careers page", "News alerts", "Partner page"],
-  },
-  {
-    id: "medchain",
-    name: "MedChain Logistics",
-    tier: "Expansion",
-    urgency: "High",
-    score: 86,
-    sources: 10,
-    latest: "24 min ago",
-    notifications: { email: true, webhook: true },
-    summary:
-      "Compliance platform hiring and cold-chain expansion create a timely account action window.",
-    actions: [
-      "Draft outreach around compliance workflow acceleration.",
-      "Attach cold-chain expansion evidence to CRM.",
-      "Notify account owner today.",
-    ],
-    signals: [
-      {
-        type: "Newsroom",
-        time: "Today 10:28",
-        title: "Cold-chain network expansion announced",
-        evidence:
-          "Announcement calls out compliance controls and regional rollout complexity.",
-        urgency: "High",
-      },
-      {
-        type: "Careers",
-        time: "Today 09:16",
-        title: "Compliance platform lead role opened",
-        evidence:
-          "Role owns tooling for audits, vendor workflows, and operational reporting.",
-        urgency: "High",
-      },
-      {
-        type: "Release notes",
-        time: "Yesterday 18:04",
-        title: "Vendor portal audit feature added",
-        evidence:
-          "Release notes mention audit trails, vendor actions, and exception routing.",
-        urgency: "Medium",
-      },
-    ],
-    sourcesList: ["Newsroom RSS", "Careers page", "Release notes", "Compliance blog"],
-  },
-];
 
 function urgencyVariant(urgency: string) {
   if (urgency === "High") return "danger";
@@ -345,8 +78,12 @@ function sourceIcon(type: string) {
 }
 
 export function MonitoringView() {
-  const [selectedAccountId, setSelectedAccountId] = useState(accounts[0].id);
+  const { data: accounts = [], isLoading, isError } = useMonitoring();
+  const addEntity = useAddEntity();
+
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
+  const [addForm, setAddForm] = useState<{ type: "company" | "person"; name: string; tier: string; sources: string; email: string; webhook: string }>({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -364,7 +101,37 @@ export function MonitoringView() {
   const selectedAccount =
     visibleAccounts.find((account) => account.id === selectedAccountId) ??
     visibleAccounts[0] ??
-    accounts[0];
+    null;
+
+  async function handleAddAccount() {
+    const input: CreateEntityInput = {
+      type: addForm.type,
+      name: addForm.name,
+      tier: addForm.tier || undefined,
+      seed_urls: addForm.sources ? addForm.sources.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
+      notifications: { email: !!addForm.email, webhook: !!addForm.webhook },
+    };
+    await addEntity.mutateAsync(input);
+    toast.success("Account added to watchlist", { icon: <FolderPlus className="h-4 w-4" /> });
+    setIsAddAccountOpen(false);
+    setAddForm({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-muted-foreground">
+        Loading watchlist…
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-64 items-center justify-center text-destructive">
+        Failed to load monitoring data.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -392,6 +159,17 @@ export function MonitoringView() {
         </div>
       </div>
 
+      {accounts.length === 0 ? (
+        <div className="flex h-64 flex-col items-center justify-center gap-3 text-muted-foreground">
+          <p>No accounts in watchlist yet.</p>
+          <Button onClick={() => setIsAddAccountOpen(true)}>
+            <FolderPlus className="h-4 w-4" />
+            Add Account
+          </Button>
+        </div>
+      ) : null}
+
+      {accounts.length > 0 && selectedAccount ? (
       <div className="grid gap-6 xl:grid-cols-[0.34fr_0.66fr]">
         <div>
           <Card>
@@ -527,7 +305,7 @@ export function MonitoringView() {
                     Evidence Timeline
                   </div>
                   {selectedAccount.signals.map((signal) => {
-                    const Icon = sourceIcon(signal.type);
+                    const Icon = sourceIcon(signal.type ?? "");
 
                     return (
                       <div key={`${signal.type}-${signal.time}`} className="rounded-md border bg-background p-4">
@@ -541,7 +319,7 @@ export function MonitoringView() {
                               </div>
                             </div>
                           </div>
-                          <Badge variant={urgencyVariant(signal.urgency)}>{signal.urgency}</Badge>
+                          <Badge variant={urgencyVariant(signal.urgency ?? "")}>{signal.urgency}</Badge>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-muted-foreground">{signal.evidence}</p>
                       </div>
@@ -571,14 +349,6 @@ export function MonitoringView() {
                       <Globe className="h-4 w-4 text-[var(--brand)]" />
                       Custom Sources
                     </div>
-                    <div className="space-y-2">
-                      {selectedAccount.sourcesList.map((source) => (
-                        <div key={source} className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm">
-                          <span>{source}</span>
-                          <Radio className="h-4 w-4 text-[var(--brand)]" />
-                        </div>
-                      ))}
-                    </div>
                     <div className="flex gap-2">
                       <Input placeholder="https://company.com/news/rss" />
                       <Button size="icon" variant="outline" aria-label="Add source" onClick={() => toast.success("Source added", { icon: <Plus className="h-4 w-4" /> })}>
@@ -594,27 +364,17 @@ export function MonitoringView() {
                   <Workflow className="h-4 w-4 text-[var(--brand)]" />
                   Next Best Actions
                 </div>
-                <div className="grid gap-4 xl:grid-cols-[0.58fr_0.42fr]">
-                  <div className="space-y-3">
-                    {selectedAccount.actions.map((action) => (
-                      <div key={action} className="flex items-start gap-3 rounded-md border bg-background p-3 text-sm">
-                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" />
-                        <span>{action}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-3">
-                    <Textarea defaultValue={`Subject: ${selectedAccount.name} - delivery pressure and supplier execution\n\nNoticed the recent signals around execution capacity and platform coordination. Worth comparing notes on where external engineering support could remove delivery bottlenecks.`} />
-                    <div className="flex flex-wrap gap-2">
-                      <Button onClick={() => toast.success("Outreach started", { icon: <Mail className="h-4 w-4" /> })}>
-                        <Mail className="h-4 w-4" />
-                        Start Outreach
-                      </Button>
-                      <Button variant="outline" onClick={() => toast.success("Logged in CRM", { icon: <DatabaseZap className="h-4 w-4" /> })}>
-                        <DatabaseZap className="h-4 w-4" />
-                        Log in CRM
-                      </Button>
-                    </div>
+                <div className="space-y-3">
+                  <Textarea defaultValue={`Subject: ${selectedAccount.name} - delivery pressure and supplier execution\n\nNoticed the recent signals around execution capacity and platform coordination. Worth comparing notes on where external engineering support could remove delivery bottlenecks.`} />
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => toast.success("Outreach started", { icon: <Mail className="h-4 w-4" /> })}>
+                      <Mail className="h-4 w-4" />
+                      Start Outreach
+                    </Button>
+                    <Button variant="outline" onClick={() => toast.success("Logged in CRM", { icon: <DatabaseZap className="h-4 w-4" /> })}>
+                      <DatabaseZap className="h-4 w-4" />
+                      Log in CRM
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -622,6 +382,7 @@ export function MonitoringView() {
           </Card>
         </div>
       </div>
+      ) : null}
 
       {isAddAccountOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={(event) => { if (event.target === event.currentTarget) setIsAddAccountOpen(false); }}>
@@ -641,19 +402,44 @@ export function MonitoringView() {
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Type</div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={addForm.type === "company" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAddForm((f) => ({ ...f, type: "company" }))}
+                    className="flex items-center gap-2"
+                  >
+                    <BriefcaseBusiness className="h-4 w-4" />
+                    Company
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={addForm.type === "person" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAddForm((f) => ({ ...f, type: "person" }))}
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Person
+                  </Button>
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium">
-                  Account Name
-                  <Input defaultValue="BMW Group" />
+                  {addForm.type === "person" ? "Full Name" : "Account Name"}
+                  <Input value={addForm.name} onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))} placeholder={addForm.type === "person" ? "Jane Smith" : "BMW Group"} />
                 </label>
                 <label className="space-y-2 text-sm font-medium">
                   Tier
-                  <Input defaultValue="Strategic" />
+                  <Input value={addForm.tier} onChange={(e) => setAddForm((f) => ({ ...f, tier: e.target.value }))} placeholder="Strategic" />
                 </label>
               </div>
               <label className="space-y-2 text-sm font-medium">
-                Sources
-                <Textarea defaultValue="Newsroom RSS, careers page, executive blog, YouTube channel" />
+                Sources (comma-separated URLs)
+                <Textarea value={addForm.sources} onChange={(e) => setAddForm((f) => ({ ...f, sources: e.target.value }))} placeholder="https://company.com/news, https://company.com/careers" />
               </label>
               <div className="mt-4 space-y-2">
                 <div className="text-sm font-medium">Alert routing</div>
@@ -668,14 +454,14 @@ export function MonitoringView() {
                       <Mail className="h-4 w-4 text-[var(--brand)]" />
                       Email
                     </span>
-                    <Input defaultValue="account-alerts@vention.dev" />
+                    <Input value={addForm.email} onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))} placeholder="account-alerts@company.com" />
                   </label>
                   <label className="space-y-2 text-sm font-medium">
                     <span className="flex items-center gap-2">
                       <Webhook className="h-4 w-4 text-[var(--brand)]" />
                       Webhook
                     </span>
-                    <Input defaultValue="https://hooks.example.com/watchlist" />
+                    <Input value={addForm.webhook} onChange={(e) => setAddForm((f) => ({ ...f, webhook: e.target.value }))} placeholder="https://hooks.example.com/watchlist" />
                   </label>
                   </div>
                 </div>
@@ -684,9 +470,9 @@ export function MonitoringView() {
                 <Button variant="outline" onClick={() => setIsAddAccountOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => { toast.success("Account added to watchlist", { icon: <FolderPlus className="h-4 w-4" /> }); setIsAddAccountOpen(false); }}>
+                <Button onClick={handleAddAccount} disabled={!addForm.name || addEntity.isPending}>
                   <FolderPlus className="h-4 w-4" />
-                  Add Account
+                  {addEntity.isPending ? "Adding…" : "Add Account"}
                 </Button>
               </div>
             </CardContent>

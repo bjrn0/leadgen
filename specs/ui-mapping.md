@@ -164,7 +164,7 @@ Must show:
 
 | UI action | Backend event |
 | --- | --- |
-| Add Account | create account/watchlist/source registry/scheduler |
+| Add Account | `POST /api/entities` — body: `{ type: "person" \| "company", name, tier?, region?, seed_urls?, notifications? }` → creates entity record, source registry entries, notification routes, and scheduler entries |
 | Select account | load timeline, sources, summaries, actions |
 | Refresh Now | enqueue immediate source checks |
 | Add Custom Source | create source, run first fetch |
