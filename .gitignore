@@ -7,6 +7,8 @@ node_modules
 dist
 coverage
 *.log
+*.tsbuildinfo
 tmp
 vendor
 bin
+.trigger

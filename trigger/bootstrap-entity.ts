@@ -1,4 +1,4 @@
-import { task } from "@trigger.dev/sdk/v3";
+import { task } from "@trigger.dev/sdk";
 import { EntityInputSchema } from "../pipeline/schemas.js";
 import { runEntityCycle } from "../pipeline/pipeline.js";
 

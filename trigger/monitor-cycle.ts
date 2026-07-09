@@ -1,4 +1,4 @@
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules } from "@trigger.dev/sdk";
 import { listEnabledEntities } from "../pipeline/store.js";
 import { runEntityCycle } from "../pipeline/pipeline.js";
 
