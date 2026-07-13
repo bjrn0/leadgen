@@ -18,12 +18,14 @@ upsert entity → seed sources → crawl (Firecrawl / Browserbase)
    → dedup (content hash + pgvector near-dup)
    → classify (LLM: relevant? about the target? recent? actionability 0–1)
    → [gate: drop irrelevant / stale / low-score pages before spending tokens]
-   → extract (LLM: structured signals with VERBATIM evidence quotes)
+   → extract (LLM: structured signals with VERBATIM evidence quotes
+              + mentioned entities for new-lead discovery — same call, no extra spend)
    → grade (quality gate, incl. evidence-grounding check that kills hallucinations)
    → store
+   → derive opportunities (deterministic: score = confidence × urgency × recency)
 ```
 
-It writes to five tables and one read view (`supabase/migrations/0001_init.sql`):
+It writes to eight tables and one read view (`supabase/migrations/0001_init.sql` + `0002_leadgen.sql`):
 
 | Table | Holds |
 |---|---|
@@ -32,10 +34,22 @@ It writes to five tables and one read view (`supabase/migrations/0001_init.sql`)
 | `findings` | crawled pages + dedup keys + embedding |
 | `insights` | the structured LLM output the dashboard shows (`quality` = `ok` \| `low`) |
 | `runs` | one row per cycle (status + stats) — the feedback loop |
+| `opportunities` | ranked lead-gen queue derived from ok insights (`pipeline/opportunities.ts`) |
+| `drafts` | AI-generated outreach emails per opportunity (on-demand only, grounded) |
+| `lead_candidates` | entities discovered alongside watched accounts (`pipeline/discovery.ts`) |
 | **`v_monitoring_accounts`** (view) | entities + recent `ok` insights reshaped into the dashboard's account shape |
 
 `v_monitoring_accounts` is the contract: `id, name, tier, urgency, score, sources, latest,
 notifications, summary, signals[]` where each signal is `{ type, time, title, evidence, urgency }`.
+All timestamps in the view are ISO-8601 UTC; display formatting lives in `app/src/lib/format.ts`.
+
+**Monitoring → Lead Generation link:** each quality-ok, actionable insight becomes at most one
+`opportunities` row — `score = round(100 × confidence × urgencyWeight × recencyDecay)`, so the
+ranking is explainable and reproducible (no extra LLM call). Outreach drafts are generated
+on-demand only (`POST /api/opportunities/[id]/draft`, prompt + grounding verification in
+`pipeline/outreach.ts`). New-lead discovery rides the existing extract call: mentioned entities are
+validated in code (verbatim-evidence check, self-mention filter) and land in `lead_candidates` for
+one-click watchlisting.
 
 ---
 
@@ -108,10 +122,12 @@ You need two processes. The dashboard works even if the worker is down (the enti
 it just won't be processed until a worker/cron runs).
 
 ```bash
-# 0. one-time: env for the Next.js app (it reads from app/.env.local, not the repo root)
-#    create app/.env.local with at least:
+# 0. one-time: put env in the repo-root .env.local — the single source of truth.
+#    app/next.config.ts loads it for the Next.js app; pipeline/config.ts and
+#    trigger.config.ts load it for the engine. Needed at minimum:
 #      NEXT_PUBLIC_SUPABASE_URL=...        # your Supabase project URL
 #      DATABASE_SECRET_KEY=sb_secret_...   # service-role / secret key
+#      NEBIUS_API_KEY=...                  # LLM (classify/extract/drafts)
 #      TRIGGER_SECRET_KEY=tr_dev_...       # omit to skip triggering (insert still works)
 
 # 1. the engine worker (repo root — where trigger.config.ts lives)
@@ -136,11 +152,28 @@ The pure-engine path (no app, no Trigger.dev) still works for backfills:
 `npm run seed-and-run` (reads `data/seed-entities.json`) and `npm run export-findings` (dumps the
 current DB to `data/output/*.json`).
 
+**Stage-wise runner** — run and inspect any single pipeline stage before trusting it end-to-end
+(`scripts/run-stage.ts`):
+
+```bash
+npm run run-stage -- crawl         --only person:tim-cook --dry-run   # the ONLY stage that spends Firecrawl quota
+npm run run-stage -- classify      --only person:tim-cook --limit 3   # re-runs the LLM gate on stored findings
+npm run run-stage -- extract       --only person:tim-cook --dry-run   # insights + discovered mentions, grounding verdicts
+npm run run-stage -- opportunities --only person:tim-cook --dry-run   # score breakdowns + skip reasons
+npm run run-stage -- draft         --only person:tim-cook --dry-run   # prints the generated email + grounding check
+npm run run-stage -- all           --only person:tim-cook             # full runEntityCycle
+```
+
+Every stage after `crawl` reads stored `findings.raw_markdown` from the DB, so iterating on
+prompts/thresholds costs LLM tokens only — no crawl quota. `--dry-run` prints what would be stored
+without writing.
+
 ---
 
 ## 5. Deployment
 
-1. **Database**: apply `supabase/migrations/0001_init.sql` (Supabase SQL editor or `psql`).
+1. **Database**: apply `supabase/migrations/0001_init.sql` then `0002_leadgen.sql` (Supabase SQL
+   editor or `psql`).
 2. **Engine**: `npx trigger.dev@latest deploy` (uses `trigger.config.ts`; set `TRIGGER_PROJECT_REF`).
    This deploys both `bootstrap-entity` (per-entity) and `monitor-cycle` (hourly cron).
 3. **Dashboard**: deploy the `app` workspace (e.g. Vercel) with `NEXT_PUBLIC_SUPABASE_URL`,

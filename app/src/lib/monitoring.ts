@@ -26,6 +26,48 @@ export interface CreateEntityInput {
   notifications?: { email: boolean; webhook: boolean };
 }
 
+/**
+ * Targeted profile updates: toggle notification channels or add a custom seed
+ * URL. Optimistically updates the watchlist cache for instant toggle feedback.
+ */
+export function useUpdateEntity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      notifications?: { email?: boolean; webhook?: boolean };
+      add_seed_url?: string;
+    }): Promise<{ id: string }> => {
+      const { id, ...body } = input;
+      const res = await fetch(`/api/entities/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to update account");
+      return res.json();
+    },
+    onMutate: async (input) => {
+      if (!input.notifications) return;
+      await qc.cancelQueries({ queryKey: ["monitoring"] });
+      const previous = qc.getQueryData<MonitoringAccount[]>(["monitoring"]);
+      qc.setQueryData<MonitoringAccount[]>(["monitoring"], (accounts) =>
+        (accounts ?? []).map((a) =>
+          a.id === input.id
+            ? { ...a, notifications: { ...a.notifications, ...input.notifications } }
+            : a,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
+      const ctx = context as { previous?: MonitoringAccount[] } | undefined;
+      if (ctx?.previous) qc.setQueryData(["monitoring"], ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["monitoring"] }),
+  });
+}
+
 /** Store an entity and kick off its first monitoring cycle. Invalidates the watchlist. */
 export function useAddEntity() {
   const qc = useQueryClient();

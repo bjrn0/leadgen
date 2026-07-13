@@ -22,26 +22,35 @@ function Header({ view }: { view: ViewType }) {
   );
 }
 
-function ViewRenderer({ view }: { view: ViewType }) {
-  switch (view) {
-    case "monitoring":
-      return <MonitoringView />;
-    case "lead-generation":
-    default:
-      return <LeadGenerationView />;
-  }
-}
-
 export default function DashboardPage() {
   const [selectedView, setSelectedView] = useState<ViewType>("lead-generation");
+  // Set when Monitoring's "View opportunities" jumps here; cleared via the filter chip.
+  const [leadGenEntityFilter, setLeadGenEntityFilter] = useState<string | null>(null);
+
+  function handleViewOpportunities(entityId: string) {
+    setLeadGenEntityFilter(entityId);
+    setSelectedView("lead-generation");
+  }
+
+  function handleSelectView(view: ViewType) {
+    if (view === "lead-generation") setLeadGenEntityFilter(null);
+    setSelectedView(view);
+  }
 
   return (
     <SidebarProvider>
-      <AppSidebar currentView={selectedView} onSelect={setSelectedView} />
+      <AppSidebar currentView={selectedView} onSelect={handleSelectView} />
       <SidebarInset>
         <Header view={selectedView} />
         <main className="flex-1 overflow-auto bg-background">
-          <ViewRenderer view={selectedView} />
+          {selectedView === "monitoring" ? (
+            <MonitoringView onViewOpportunities={handleViewOpportunities} />
+          ) : (
+            <LeadGenerationView
+              entityFilter={leadGenEntityFilter}
+              onClearEntityFilter={() => setLeadGenEntityFilter(null)}
+            />
+          )}
         </main>
       </SidebarInset>
     </SidebarProvider>

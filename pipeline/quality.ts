@@ -2,7 +2,7 @@ import { config } from "./config.js";
 import type { Classification, Insight } from "./schemas.js";
 
 /** Collapse whitespace + lowercase so verbatim matching tolerates trivial reformatting. */
-function normalizeForMatch(s: string): string {
+export function normalizeForMatch(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
 

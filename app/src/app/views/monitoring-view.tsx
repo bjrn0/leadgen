@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useMonitoring, useAddEntity, type CreateEntityInput } from "@/lib/monitoring";
+import { useEffect, useMemo, useState } from "react";
+import { useMonitoring, useAddEntity, useUpdateEntity, type CreateEntityInput } from "@/lib/monitoring";
+import { formatDateUTC } from "@/lib/format";
 import {
-  AlertTriangle,
   Bell,
   BriefcaseBusiness,
-  CalendarClock,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock3,
-  DatabaseZap,
   FileText,
   FolderPlus,
   Globe,
@@ -20,9 +15,9 @@ import {
   Plus,
   Radio,
   Sparkles,
+  Target,
   UserPlus,
   Webhook,
-  Workflow,
   X,
 } from "lucide-react";
 
@@ -39,6 +34,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Pagination } from "@/app/components/pagination";
+import type { MonitoringAccount } from "@/app/types";
+
+const ACCOUNTS_PER_PAGE = 3;
+const SIGNALS_PER_PAGE = 3;
 
 function urgencyVariant(urgency: string) {
   if (urgency === "High") return "danger";
@@ -46,42 +46,59 @@ function urgencyVariant(urgency: string) {
   return "secondary";
 }
 
-function NotificationIcon({
+/** Toggleable notification channel — persists via PATCH /api/entities/[id]. */
+function NotificationToggle({
   active,
   icon: Icon,
   label,
+  onToggle,
 }: {
   active: boolean;
   icon: typeof Mail;
   label: string;
+  onToggle: () => void;
 }) {
   return (
-    <span
-      className={`inline-flex size-7 items-center justify-center rounded-md border ${
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      className={`inline-flex size-7 items-center justify-center rounded-md border transition ${
         active
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-border bg-muted text-muted-foreground"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          : "border-border bg-muted text-muted-foreground hover:bg-accent"
       }`}
-      title={label}
-      aria-label={label}
+      title={`${label}: ${active ? "on" : "off"} — click to toggle`}
+      aria-label={`${label}: ${active ? "on" : "off"}`}
+      aria-pressed={active}
     >
       <Icon className="h-3.5 w-3.5" />
-    </span>
+    </button>
   );
 }
 
 function sourceIcon(type: string) {
-  if (type === "Careers") return BriefcaseBusiness;
-  if (type === "Newsroom" || type === "News") return Newspaper;
-  if (type === "Release notes" || type === "Blog") return FileText;
+  if (type === "hiring") return BriefcaseBusiness;
+  if (type === "product_launch" || type === "technology_change") return FileText;
+  if (type === "funding" || type === "partnership" || type === "expansion") return Newspaper;
   return Radio;
 }
 
-export function MonitoringView() {
+export function MonitoringView({
+  onViewOpportunities,
+}: {
+  onViewOpportunities?: (entityId: string) => void;
+}) {
   const { data: accounts = [], isLoading, isError } = useMonitoring();
   const addEntity = useAddEntity();
+  const updateEntity = useUpdateEntity();
 
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [accountsPage, setAccountsPage] = useState(1);
+  const [signalsPage, setSignalsPage] = useState(1);
+  const [customSourceUrl, setCustomSourceUrl] = useState("");
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
   const [addForm, setAddForm] = useState<{ type: "company" | "person"; name: string; tier: string; sources: string; email: string; webhook: string }>({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
 
@@ -97,11 +114,28 @@ export function MonitoringView() {
     }
   }, [isAddAccountOpen]);
 
-  const visibleAccounts = accounts.slice(0, 5);
-  const selectedAccount =
-    visibleAccounts.find((account) => account.id === selectedAccountId) ??
-    visibleAccounts[0] ??
-    null;
+  const accountsPageCount = Math.max(1, Math.ceil(accounts.length / ACCOUNTS_PER_PAGE));
+  const visibleAccounts = useMemo(
+    () => accounts.slice((accountsPage - 1) * ACCOUNTS_PER_PAGE, accountsPage * ACCOUNTS_PER_PAGE),
+    [accounts, accountsPage],
+  );
+
+  // Selection survives page flips; falls back to the first visible account.
+  const selectedAccount: MonitoringAccount | null =
+    accounts.find((account) => account.id === selectedAccountId) ?? visibleAccounts[0] ?? null;
+
+  // Evidence timeline pagination resets when switching accounts.
+  useEffect(() => {
+    setSignalsPage(1);
+    setCustomSourceUrl("");
+  }, [selectedAccount?.id]);
+
+  const signals = selectedAccount?.signals ?? [];
+  const signalsPageCount = Math.max(1, Math.ceil(signals.length / SIGNALS_PER_PAGE));
+  const visibleSignals = signals.slice(
+    (signalsPage - 1) * SIGNALS_PER_PAGE,
+    signalsPage * SIGNALS_PER_PAGE,
+  );
 
   async function handleAddAccount() {
     const input: CreateEntityInput = {
@@ -115,6 +149,33 @@ export function MonitoringView() {
     toast.success("Account added to watchlist", { icon: <FolderPlus className="h-4 w-4" /> });
     setIsAddAccountOpen(false);
     setAddForm({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
+  }
+
+  function handleToggleNotification(account: MonitoringAccount, channel: "email" | "webhook") {
+    updateEntity.mutate(
+      { id: account.id, notifications: { [channel]: !account.notifications[channel] } },
+      { onError: (err) => toast.error(err.message) },
+    );
+  }
+
+  function handleAddCustomSource() {
+    if (!selectedAccount) return;
+    try {
+      new URL(customSourceUrl);
+    } catch {
+      toast.error("Enter a valid URL (https://…)");
+      return;
+    }
+    updateEntity.mutate(
+      { id: selectedAccount.id, add_seed_url: customSourceUrl },
+      {
+        onSuccess: () => {
+          toast.success("Source added — it will be crawled on the next cycle");
+          setCustomSourceUrl("");
+        },
+        onError: (err) => toast.error(err.message),
+      },
+    );
   }
 
   if (isLoading) {
@@ -143,20 +204,14 @@ export function MonitoringView() {
           <div>
             <h1 className="text-2xl font-bold">Monitoring</h1>
             <p className="text-sm text-muted-foreground">
-              Watchlisted accounts, recent deltas, urgency alerts, and account-specific next actions.
+              Watchlisted accounts, recent signals, and the evidence behind them.
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline">
-            <CalendarClock className="h-4 w-4" />
-            Digest: 3h
-          </Button>
-          <Button onClick={() => setIsAddAccountOpen(true)}>
-            <FolderPlus className="h-4 w-4" />
-            Add Account
-          </Button>
-        </div>
+        <Button onClick={() => setIsAddAccountOpen(true)}>
+          <FolderPlus className="h-4 w-4" />
+          Add Account
+        </Button>
       </div>
 
       {accounts.length === 0 ? (
@@ -176,23 +231,29 @@ export function MonitoringView() {
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    Watchlist
-                    <Badge variant="brand">{visibleAccounts.length} visible</Badge>
-                  </CardTitle>
-              <CardDescription>Named accounts under continuous delta tracking.</CardDescription>
+                  <CardTitle>Watchlist</CardTitle>
+                  <CardDescription>Named accounts under continuous delta tracking.</CardDescription>
                 </div>
                 <Badge variant="outline">{accounts.length} total</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="max-h-[760px] space-y-3 overflow-y-auto pr-1">
+              <div className="space-y-3">
                 {visibleAccounts.map((account) => (
-                  <button
+                  // div+role, not <button>: the notification toggles inside are
+                  // buttons themselves, and buttons cannot nest.
+                  <div
                     key={account.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedAccountId(account.id)}
-                    className={`w-full rounded-md border p-4 text-left transition hover:bg-accent ${
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedAccountId(account.id);
+                      }
+                    }}
+                    className={`w-full cursor-pointer rounded-md border p-4 text-left transition hover:bg-accent ${
                       selectedAccount.id === account.id
                         ? "border-[var(--brand)] bg-[var(--brand-light)] shadow-sm ring-2 ring-[var(--brand-border)]"
                         : "bg-background"
@@ -205,18 +266,20 @@ export function MonitoringView() {
                           <Badge variant="outline">{account.tier}</Badge>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {account.sources} sources - latest {account.latest}
+                          {account.sources} sources · latest {formatDateUTC(account.latest)}
                         </div>
                         <div className="mt-3 flex items-center gap-2">
-                          <NotificationIcon
+                          <NotificationToggle
                             active={account.notifications.email}
                             icon={Mail}
-                            label={account.notifications.email ? "Email notifications active" : "Email notifications inactive"}
+                            label="Email notifications"
+                            onToggle={() => handleToggleNotification(account, "email")}
                           />
-                          <NotificationIcon
+                          <NotificationToggle
                             active={account.notifications.webhook}
                             icon={Webhook}
-                            label={account.notifications.webhook ? "Webhook active" : "Webhook inactive"}
+                            label="Webhook"
+                            onToggle={() => handleToggleNotification(account, "webhook")}
                           />
                         </div>
                       </div>
@@ -224,29 +287,17 @@ export function MonitoringView() {
                     </div>
                     <div className="mt-4">
                       <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Signal strength</span>
+                        <span title="Average confidence of this account's quality-checked signals (0–100)">
+                          Signal confidence
+                        </span>
                         <span>{account.score}</span>
                       </div>
                       <Progress value={account.score} />
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between border-t pt-4">
-                <Button size="sm" variant="outline">
-                  <ChevronLeft className="h-4 w-4" />
-                  Prev
-                </Button>
-                <div className="flex items-center gap-1">
-                  <Badge variant="brand">1</Badge>
-                  <Badge variant="outline">2</Badge>
-                  <Badge variant="outline">3</Badge>
-                </div>
-                <Button size="sm" variant="outline">
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+              <Pagination page={accountsPage} pageCount={accountsPageCount} onChange={setAccountsPage} />
             </CardContent>
           </Card>
         </div>
@@ -258,32 +309,30 @@ export function MonitoringView() {
                 <div>
                   <CardTitle>{selectedAccount.name} Intelligence Hub</CardTitle>
                   <CardDescription>
-                    {selectedAccount.tier} account - {selectedAccount.sources} tracked sources - latest signal {selectedAccount.latest}
+                    {selectedAccount.tier} account · {selectedAccount.sources} tracked sources · latest signal {formatDateUTC(selectedAccount.latest, { withHour: true })}
                   </CardDescription>
                   <div className="mt-3 flex items-center gap-2">
-                    <NotificationIcon
+                    <NotificationToggle
                       active={selectedAccount.notifications.email}
                       icon={Mail}
-                      label={selectedAccount.notifications.email ? "Email notifications active" : "Email notifications inactive"}
+                      label="Email notifications"
+                      onToggle={() => handleToggleNotification(selectedAccount, "email")}
                     />
-                    <NotificationIcon
+                    <NotificationToggle
                       active={selectedAccount.notifications.webhook}
                       icon={Webhook}
-                      label={selectedAccount.notifications.webhook ? "Webhook active" : "Webhook inactive"}
+                      label="Webhook"
+                      onToggle={() => handleToggleNotification(selectedAccount, "webhook")}
                     />
-                    <span className="text-xs text-muted-foreground">Notification routing for this account</span>
+                    <span className="text-xs text-muted-foreground">Notification routing — click to toggle</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => toast.success("Task created", { icon: <UserPlus className="h-4 w-4" /> })}>
-                    <UserPlus className="h-4 w-4" />
-                    Create Task
+                {onViewOpportunities ? (
+                  <Button onClick={() => onViewOpportunities(selectedAccount.id)}>
+                    <Target className="h-4 w-4" />
+                    View opportunities
                   </Button>
-                  <Button variant="outline" onClick={() => toast.info("Email draft opened", { icon: <Mail className="h-4 w-4" /> })}>
-                    <Mail className="h-4 w-4" />
-                    Draft Email
-                  </Button>
-                </div>
+                ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -291,11 +340,11 @@ export function MonitoringView() {
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Sparkles className="h-4 w-4 text-[var(--brand)]" />
-                    Last 3 Hours
+                    Latest Summary
                   </div>
                   <Badge variant={urgencyVariant(selectedAccount.urgency)}>{selectedAccount.urgency} urgency</Badge>
                 </div>
-                <p className="text-sm leading-6 text-muted-foreground">{selectedAccount.summary}</p>
+                <p className="text-sm leading-6 text-muted-foreground">{selectedAccount.summary ?? "No signals extracted yet — the next monitoring cycle will populate this."}</p>
               </div>
 
               <div className="grid gap-4 lg:grid-cols-[0.6fr_0.4fr]">
@@ -303,19 +352,25 @@ export function MonitoringView() {
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Clock3 className="h-4 w-4 text-[var(--brand)]" />
                     Evidence Timeline
+                    <Badge variant="outline">{signals.length}</Badge>
                   </div>
-                  {selectedAccount.signals.map((signal) => {
+                  {visibleSignals.length === 0 ? (
+                    <p className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+                      No signals yet for this account.
+                    </p>
+                  ) : null}
+                  {visibleSignals.map((signal, idx) => {
                     const Icon = sourceIcon(signal.type ?? "");
 
                     return (
-                      <div key={`${signal.type}-${signal.time}`} className="rounded-md border bg-background p-4">
+                      <div key={`${signal.time}-${idx}`} className="rounded-md border bg-background p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="flex items-start gap-3">
                             <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" />
                             <div>
                               <div className="font-medium">{signal.title}</div>
                               <div className="mt-1 text-xs text-muted-foreground">
-                                {signal.type} - {signal.time}
+                                {signal.type} · {formatDateUTC(signal.time)}
                               </div>
                             </div>
                           </div>
@@ -325,55 +380,34 @@ export function MonitoringView() {
                       </div>
                     );
                   })}
+                  <Pagination page={signalsPage} pageCount={signalsPageCount} onChange={setSignalsPage} />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <AlertTriangle className="h-4 w-4 text-[var(--brand)]" />
-                      Alert Rules
-                    </div>
-                    <div className="rounded-md border bg-background p-3 text-sm">
-                      <div className="flex items-center gap-2 font-medium">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        Funding, executive hires, public pain points
-                      </div>
-                      <p className="mt-2 leading-6 text-muted-foreground">
-                        Email and webhook notifications are enabled for high-urgency signals.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      <Globe className="h-4 w-4 text-[var(--brand)]" />
-                      Custom Sources
-                    </div>
-                    <div className="flex gap-2">
-                      <Input placeholder="https://company.com/news/rss" />
-                      <Button size="icon" variant="outline" aria-label="Add source" onClick={() => toast.success("Source added", { icon: <Plus className="h-4 w-4" /> })}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Workflow className="h-4 w-4 text-[var(--brand)]" />
-                  Next Best Actions
-                </div>
                 <div className="space-y-3">
-                  <Textarea defaultValue={`Subject: ${selectedAccount.name} - delivery pressure and supplier execution\n\nNoticed the recent signals around execution capacity and platform coordination. Worth comparing notes on where external engineering support could remove delivery bottlenecks.`} />
-                  <div className="flex flex-wrap gap-2">
-                    <Button onClick={() => toast.success("Outreach started", { icon: <Mail className="h-4 w-4" /> })}>
-                      <Mail className="h-4 w-4" />
-                      Start Outreach
-                    </Button>
-                    <Button variant="outline" onClick={() => toast.success("Logged in CRM", { icon: <DatabaseZap className="h-4 w-4" /> })}>
-                      <DatabaseZap className="h-4 w-4" />
-                      Log in CRM
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-[var(--brand)]" />
+                    Custom Sources
+                  </div>
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Add a URL to crawl for this account on every monitoring cycle.
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://company.com/newsroom"
+                      value={customSourceUrl}
+                      onChange={(e) => setCustomSourceUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddCustomSource();
+                      }}
+                    />
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label="Add source"
+                      disabled={!customSourceUrl || updateEntity.isPending}
+                      onClick={handleAddCustomSource}
+                    >
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

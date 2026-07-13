@@ -3,10 +3,12 @@ import { config } from "./config.js";
 import {
   ClassificationSchema,
   ExtractionSchema,
+  RELATIONSHIP_TYPES,
   SIGNAL_TYPES,
   type Classification,
   type EntityInput,
   type Insight,
+  type MentionedEntity,
 } from "./schemas.js";
 import type { CrawledPage } from "./crawl.js";
 
@@ -50,8 +52,23 @@ const CLASSIFICATION_JSON_SCHEMA = {
 const EXTRACTION_JSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["insights"],
+  required: ["insights", "mentioned_entities"],
   properties: {
+    mentioned_entities: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "type", "relationship", "reason", "evidence_excerpt"],
+        properties: {
+          name: { type: "string" },
+          type: { type: "string", enum: ["person", "company"] },
+          relationship: { type: "string", enum: [...RELATIONSHIP_TYPES] },
+          reason: { type: "string" },
+          evidence_excerpt: { type: "string" },
+        },
+      },
+    },
     insights: {
       type: "array",
       items: {
@@ -156,11 +173,17 @@ export async function classify(entity: EntityInput, page: CrawledPage): Promise<
   );
 }
 
+export interface ExtractResult {
+  insights: Insight[];
+  mentions: MentionedEntity[];
+}
+
 /**
  * Extraction pass: pull 0..n actionable signals from the page as structured
- * insights. Runs per chunk and concatenates.
+ * insights, plus 0..n mentioned entities for new-lead discovery (same call —
+ * no extra LLM spend). Runs per chunk and concatenates.
  */
-export async function extract(entity: EntityInput, page: CrawledPage): Promise<Insight[]> {
+export async function extract(entity: EntityInput, page: CrawledPage): Promise<ExtractResult> {
   const system =
     `You extract actionable sales signals about a specific ${entity.type} from web content. ` +
     `Only output signals that are genuinely insightful and actionable for a salesperson — ` +
@@ -171,8 +194,14 @@ export async function extract(entity: EntityInput, page: CrawledPage): Promise<I
     `excerpt. The signal must be about the target ${entity.type} (${entity.name}), not some unrelated ` +
     `third party mentioned in passing. If the content contains no genuine, verifiable signal about the ` +
     `target, return an empty insights array. It is correct and expected to return zero insights. ` +
+    `SEPARATELY, in mentioned_entities, list other companies or people named in the content that have a ` +
+    `STATED relationship to the target (partner, customer, competitor, investor, incoming/outgoing ` +
+    `executive, vendor). For each: reason = one sentence stating the relationship; evidence_excerpt = a ` +
+    `VERBATIM substring of the content proving it. Never list the target itself, its own products, ` +
+    `generic groups ("investors", "employees"), or entities only speculated about. An empty ` +
+    `mentioned_entities array is correct and expected. ` +
     `Return strict JSON.`;
-  const out: Insight[] = [];
+  const out: ExtractResult = { insights: [], mentions: [] };
   for (const chunk of chunkText(page.markdown)) {
     const user =
       `Target ${entity.type}: ${entity.name}` +
@@ -181,7 +210,8 @@ export async function extract(entity: EntityInput, page: CrawledPage): Promise<I
     const result = await structuredCall(system, user, "extract", EXTRACTION_JSON_SCHEMA, (raw) =>
       ExtractionSchema.parse(raw),
     );
-    out.push(...result.insights);
+    out.insights.push(...result.insights);
+    out.mentions.push(...result.mentioned_entities);
   }
   return out;
 }

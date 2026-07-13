@@ -51,5 +51,10 @@ export const config = {
     minInsightConfidence: num("MIN_INSIGHT_CONFIDENCE", 0.55),
     searchResultsPerQuery: num("SEARCH_RESULTS_PER_QUERY", 5),
     maxCharsPerChunk: num("MAX_CHARS_PER_CHUNK", 12000),
+    // Skip creating a second 'new' opportunity for the same (entity, signal_type)
+    // within this many days — catches "same event, different article".
+    opportunityDedupDays: num("OPPORTUNITY_DEDUP_DAYS", 7),
+    // Drafts need some variation so Regenerate produces a different email.
+    draftTemperature: num("DRAFT_TEMPERATURE", 0.4),
   },
 } as const;

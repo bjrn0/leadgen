@@ -1,6 +1,8 @@
 import { collectPages } from "./crawl.js";
 import { config } from "./config.js";
+import { filterMentions, upsertCandidates } from "./discovery.js";
 import { classify, extract } from "./extract.js";
+import { deriveOpportunities } from "./opportunities.js";
 import { gradeInsight } from "./quality.js";
 import {
   finishRun,
@@ -21,6 +23,8 @@ export interface CycleStats {
   insightsCreated: number; // quality:ok
   lowQuality: number; // quality:low (stored but excluded from dashboard)
   filtered: number; // dropped by classification before extraction
+  opportunitiesCreated: number; // derived into the lead-gen queue
+  candidatesProposed: number; // new-lead discovery proposals
 }
 
 export interface CycleResult {
@@ -40,6 +44,8 @@ const emptyStats = (): CycleStats => ({
   insightsCreated: 0,
   lowQuality: 0,
   filtered: 0,
+  opportunitiesCreated: 0,
+  candidatesProposed: 0,
 });
 
 /**
@@ -100,7 +106,7 @@ export async function runEntityCycle(
       }
 
       stats.inferred++;
-      const insights = await extract(input, page);
+      const { insights, mentions } = await extract(input, page);
       const graded = insights.map((insight) => {
         const { quality, reasons } = gradeInsight(insight, classification, page.markdown);
         return { insight, quality, reasons };
@@ -118,6 +124,16 @@ export async function runEntityCycle(
 
       await insertInsights(entityId, finding.findingId, graded, classification);
 
+      // New-lead discovery: validate + store entities the page mentioned alongside
+      // the target. Grounding is checked in code; no extra LLM call.
+      if (mentions.length > 0) {
+        const { kept, dropped } = filterMentions(input, page, mentions);
+        for (const d of dropped) console.log(`        ↳ mention dropped: "${d.name}" — ${d.reason}`);
+        const { proposed } = await upsertCandidates(entityId, finding.findingId, page, kept);
+        stats.candidatesProposed += proposed;
+        if (proposed > 0) console.log(`    + ${proposed} new lead candidate(s) proposed`);
+      }
+
       if (!sample) {
         const top = graded.find((g) => g.quality === "ok")?.insight;
         if (top) {
@@ -128,6 +144,16 @@ export async function runEntityCycle(
           };
         }
       }
+    }
+
+    // Convert fresh ok-insights into ranked opportunities (deterministic, idempotent).
+    const derived = await deriveOpportunities(entityId);
+    stats.opportunitiesCreated = derived.created.length;
+    if (derived.created.length > 0) {
+      console.log(
+        `    ★ ${derived.created.length} opportunit${derived.created.length === 1 ? "y" : "ies"} derived ` +
+          `(top score ${Math.max(...derived.created.map((o) => o.score))})`,
+      );
     }
 
     await finishRun(runId, "ok", stats as unknown as Record<string, number>);

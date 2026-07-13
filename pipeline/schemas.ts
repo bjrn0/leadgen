@@ -83,8 +83,44 @@ export const InsightSchema = z.object({
 });
 export type Insight = z.infer<typeof InsightSchema>;
 
-// Wrapper the model returns: an array, since one page may carry 0..n signals.
+// ---------------------------------------------------------------------------
+// New-lead discovery — other entities named alongside the target, emitted by
+// the same extraction call (zero extra LLM spend). Grounded like evidence:
+// evidence_excerpt must be a verbatim substring of the crawled content.
+// ---------------------------------------------------------------------------
+export const RELATIONSHIP_TYPES = [
+  "partner",
+  "customer",
+  "competitor",
+  "investor",
+  "executive",
+  "vendor",
+  "other",
+] as const;
+
+export const MentionedEntitySchema = z.object({
+  name: z.string(),
+  type: z.enum(["person", "company"]),
+  relationship: z.enum(RELATIONSHIP_TYPES),
+  reason: z.string(), // one sentence stating the relationship to the target
+  evidence_excerpt: z.string(), // VERBATIM substring of the supplied content
+});
+export type MentionedEntity = z.infer<typeof MentionedEntitySchema>;
+
+// Wrapper the model returns: arrays, since one page may carry 0..n of each.
 export const ExtractionSchema = z.object({
   insights: z.array(InsightSchema),
+  mentioned_entities: z.array(MentionedEntitySchema).default([]),
 });
 export type Extraction = z.infer<typeof ExtractionSchema>;
+
+// ---------------------------------------------------------------------------
+// Outreach draft — LLM output for a single opportunity. facts_used must each
+// substring-match the evidence supplied to the prompt (checked in code).
+// ---------------------------------------------------------------------------
+export const DraftSchema = z.object({
+  subject: z.string(),
+  body: z.string(),
+  facts_used: z.array(z.string()),
+});
+export type Draft = z.infer<typeof DraftSchema>;

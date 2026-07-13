@@ -9,6 +9,7 @@
     "build": "npm run build --workspace app",
     "lint": "npm run lint --workspace app",
     "seed-and-run": "tsx scripts/seed-and-run.ts",
+    "run-stage": "tsx scripts/run-stage.ts",
     "export-findings": "tsx scripts/export-findings.ts",
     "typecheck:pipeline": "tsc --noEmit -p tsconfig.pipeline.json"
   },

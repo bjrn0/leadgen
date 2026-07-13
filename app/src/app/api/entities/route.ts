@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { supabaseAdmin } from "@/lib/supabase";
-import { triggerBootstrap } from "@/lib/trigger";
+import { upsertEntityAndBootstrap } from "@/lib/entities-server";
 
 export const runtime = "nodejs";
 
@@ -10,6 +9,8 @@ export const runtime = "nodejs";
  * cycle. Mirrors the contract of pipeline/schemas.ts:EntityInputSchema and the
  * upsert in pipeline/store.ts:upsertEntity, so the dashboard and the local runner
  * write identical rows. Idempotent on ingest_key (re-adding updates in place).
+ * Shared upsert+bootstrap logic lives in @/lib/entities-server (also used by
+ * the lead-candidate "add to watchlist" route).
  */
 const BodySchema = z.object({
   type: z.enum(["person", "company"]).default("company"),
@@ -25,10 +26,6 @@ const BodySchema = z.object({
     .default({ email: true, webhook: false }),
 });
 
-function slug(s: string): string {
-  return s.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
-}
-
 export async function POST(req: Request) {
   let parsed;
   try {
@@ -40,45 +37,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
 
-  const ingest_key = `${parsed.type}:${slug(parsed.name)}`;
-  const profile = {
-    title: parsed.title ?? null,
-    company: parsed.company ?? null,
-    region: parsed.region ?? null,
-    tier: parsed.tier ?? null,
-    seed_urls: parsed.seed_urls,
-    cadence: parsed.cadence,
-    notifications: parsed.notifications,
-  };
-
-  const { data, error } = await supabaseAdmin()
-    .from("entities")
-    .upsert(
-      { type: parsed.type, name: parsed.name, ingest_key, profile, updated_at: new Date().toISOString() },
-      { onConflict: "ingest_key" },
-    )
-    .select("id, ingest_key")
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Fire the first cycle immediately. Non-fatal if the worker/secret is absent.
-  let triggered: { id: string } | null = null;
   try {
-    triggered = await triggerBootstrap({
-      type: parsed.type,
-      name: parsed.name,
-      ingest_key,
-      profile,
-    });
+    const result = await upsertEntityAndBootstrap(parsed);
+    return NextResponse.json(result, { status: 201 });
   } catch (err) {
-    console.error("[api/entities] bootstrap trigger failed:", (err as Error).message);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
-
-  return NextResponse.json(
-    { id: data.id, ingest_key: data.ingest_key, run_id: triggered?.id ?? null },
-    { status: 201 },
-  );
 }

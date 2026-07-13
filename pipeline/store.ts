@@ -278,6 +278,59 @@ export async function getEntityOutput(entityId: string): Promise<EntityOutput> {
   };
 }
 
+/** Load one entity by ingest_key, reconstructed as EntityInput. Used by the stage runner. */
+export async function loadEntityByIngestKey(ingestKey: string): Promise<EntityRow | null> {
+  const { data, error } = await supabase()
+    .from("entities")
+    .select("id, type, name, ingest_key, profile")
+    .eq("ingest_key", ingestKey)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const p = (data.profile ?? {}) as Record<string, unknown>;
+  const input = EntityInputSchema.parse({
+    type: data.type,
+    name: data.name,
+    ingest_key: data.ingest_key,
+    title: p.title ?? undefined,
+    company: p.company ?? undefined,
+    region: p.region ?? undefined,
+    tier: p.tier ?? undefined,
+    seed_urls: p.seed_urls ?? [],
+    cadence: p.cadence ?? undefined,
+    notifications: p.notifications ?? undefined,
+  });
+  return { id: data.id, input };
+}
+
+export interface StoredFinding {
+  id: string;
+  canonical_url: string;
+  title: string | null;
+  published_at: string | null;
+  raw_markdown: string | null;
+}
+
+/**
+ * Stored findings for one entity (newest first) — lets the stage runner re-run
+ * classify/extract on already-crawled pages without spending Firecrawl quota.
+ */
+export async function listFindings(
+  entityId: string,
+  opts: { limit?: number; url?: string } = {},
+): Promise<StoredFinding[]> {
+  let q = supabase()
+    .from("findings")
+    .select("id, canonical_url, title, published_at, raw_markdown")
+    .eq("entity_id", entityId)
+    .order("observed_at", { ascending: false })
+    .limit(opts.limit ?? 20);
+  if (opts.url) q = q.ilike("canonical_url", `%${opts.url}%`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as StoredFinding[];
+}
+
 /** Used by the cron task: all enabled entities, reconstructed as EntityInput. */
 export async function listEnabledEntities(): Promise<EntityRow[]> {
   const { data, error } = await supabase()

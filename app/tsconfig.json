@@ -11,6 +11,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@pipeline/*": [
+        "../pipeline/*"
       ]
     },
     "jsx": "preserve",
