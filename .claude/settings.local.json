@@ -8,7 +8,9 @@
       "Bash(PGPASSWORD=$\\(node -e \"require\\('dotenv'\\).config\\({path:'.env.local',quiet:true}\\); process.stdout.write\\(process.env.DATABASE_PASSWORD||''\\)\"\\) psql \"host=aws-0-eu-west-1.pooler.supabase.com port=5432 dbname=postgres user=postgres.nisxeptfqdsvaenejjcb sslmode=require\" -c \"select r.id, e.name, r.status, r.trigger, r.started_at, r.finished_at from runs r left join entities e on e.id=r.entity_id order by r.started_at desc limit 15;\")",
       "Bash(node -e \"require\\('dotenv'\\).config\\({path:'.env.local',quiet:true}\\); const k=process.env.TRIGGER_SECRET_KEY||''; console.log\\('TRIGGER_SECRET_KEY:', k? k.slice\\(0,8\\)+'...\\('+k.length+' chars\\)':'MISSING'\\); console.log\\('TRIGGER_PROJECT_REF:', process.env.TRIGGER_PROJECT_REF||'MISSING'\\);\")",
       "Bash(npx tsc *)",
-      "Bash(echo \"APP tsc exit: $?\")"
+      "Bash(echo \"APP tsc exit: $?\")",
+      "Bash(python3 *)",
+      "Bash(npm run *)"
     ]
   }
 }
