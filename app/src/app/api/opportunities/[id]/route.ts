@@ -20,7 +20,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const { data, error } = await supabaseAdmin()
     .from("opportunities")
     .select(
-      "id, entity_id, insight_id, signal_type, score, status, why_now, suggested_action, created_at, updated_at, " +
+      "id, entity_id, insight_id, signal_type, score, icp_fit, icp_fit_reason, hotness, status, why_now, suggested_action, created_at, updated_at, " +
         "entities(name, type, profile), " +
         "insights(headline, summary, why_it_matters, recommended_action, evidence, signal_type, urgency, confidence, published_at), " +
         "drafts(id, subject, body, facts_used, grounded, model, edited, created_at)",

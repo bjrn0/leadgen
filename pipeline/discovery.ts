@@ -1,4 +1,6 @@
+import type OpenAI from "openai";
 import { supabase } from "./clients.js";
+import { computeHotness, icpIsMeaningful, scoreIcpFit, type IcpRow } from "./icp.js";
 import { normalizeForMatch } from "./quality.js";
 import type { EntityInput, MentionedEntity } from "./schemas.js";
 import type { CrawledPage } from "./crawl.js";
@@ -85,14 +87,22 @@ export function filterMentions(
  * as entities (by derived ingest_key or case-insensitive name). Existing candidate
  * rows get mention_count/last_seen_at bumps; status never downgrades.
  */
+export interface CandidateIcpOptions {
+  icp?: IcpRow | null;
+  icpClient?: OpenAI;
+  model?: string;
+}
+
 export async function upsertCandidates(
   entityId: string,
   findingId: string | null,
   page: CrawledPage,
   mentions: FilteredMention[],
+  icpOpts: CandidateIcpOptions = {},
 ): Promise<{ proposed: number; skippedExisting: number }> {
   if (mentions.length === 0) return { proposed: 0, skippedExisting: 0 };
   const db = supabase();
+  const scoreFit = icpOpts.icpClient && icpOpts.model && icpIsMeaningful(icpOpts.icp);
   let proposed = 0;
   let skippedExisting = 0;
 
@@ -137,6 +147,24 @@ export async function upsertCandidates(
         .eq("id", existing.id);
       if (error) throw error;
     } else {
+      // ICP fit for the new lead (cached). Context = its relationship to the
+      // watched account, which is all we know about a freshly-discovered entity.
+      let icpFit: number | null = null;
+      let icpReason: string | null = null;
+      let hotness: number | null = null;
+      if (scoreFit) {
+        const fit = await scoreIcpFit(icpOpts.icpClient!, icpOpts.model!, {
+          icp: icpOpts.icp!,
+          subject: {
+            name: m.name,
+            type: m.type,
+            context: `${m.relationship ?? "mentioned"}: ${m.reason}`,
+          },
+        });
+        icpFit = fit.fit;
+        icpReason = fit.reason;
+        hotness = computeHotness(icpFit, 50); // no signal yet — neutral 50 baseline
+      }
       const { error } = await db.from("lead_candidates").insert({
         name: m.name,
         normalized_name: normalized,
@@ -146,6 +174,9 @@ export async function upsertCandidates(
         source_entity_id: entityId,
         finding_id: findingId,
         evidence,
+        icp_fit: icpFit,
+        icp_fit_reason: icpReason,
+        hotness,
       });
       // Tolerate a race where a concurrent run inserted the same candidate first.
       if (error && !/duplicate key/i.test(error.message)) throw error;

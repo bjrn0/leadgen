@@ -7,9 +7,11 @@ import { AppSidebar } from "@/app/components/app-sidebar";
 import type { ViewType } from "@/app/types";
 import { LeadGenerationView } from "@/app/views/lead-generation-view";
 import { MonitoringView } from "@/app/views/monitoring-view";
+import { SettingsView } from "@/app/views/settings-view";
 
 function Header({ view }: { view: ViewType }) {
-  const title = view === "lead-generation" ? "Lead Generation" : "Monitoring";
+  const title =
+    view === "lead-generation" ? "Lead Generation" : view === "monitoring" ? "Monitoring" : "Settings";
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
@@ -45,10 +47,13 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-auto bg-background">
           {selectedView === "monitoring" ? (
             <MonitoringView onViewOpportunities={handleViewOpportunities} />
+          ) : selectedView === "settings" ? (
+            <SettingsView />
           ) : (
             <LeadGenerationView
               entityFilter={leadGenEntityFilter}
               onClearEntityFilter={() => setLeadGenEntityFilter(null)}
+              onEditIcp={() => handleSelectView("settings")}
             />
           )}
         </main>

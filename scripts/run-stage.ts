@@ -38,6 +38,13 @@ import { config } from "../pipeline/config.js";
 import { collectPages, type CrawledPage } from "../pipeline/crawl.js";
 import { filterMentions, upsertCandidates } from "../pipeline/discovery.js";
 import { classify, extract } from "../pipeline/extract.js";
+import {
+  computeHotness,
+  hotnessLabel,
+  icpIsMeaningful,
+  loadActiveIcp,
+  scoreIcpFit,
+} from "../pipeline/icp.js";
 import { deriveOpportunities } from "../pipeline/opportunities.js";
 import { generateDraft } from "../pipeline/outreach.js";
 import { runEntityCycle } from "../pipeline/pipeline.js";
@@ -52,7 +59,7 @@ import {
   type StoredFinding,
 } from "../pipeline/store.js";
 
-const STAGES = ["crawl", "classify", "extract", "opportunities", "draft", "all"] as const;
+const STAGES = ["crawl", "classify", "extract", "opportunities", "draft", "icp", "all"] as const;
 type Stage = (typeof STAGES)[number];
 
 function arg(name: string): string | undefined {
@@ -260,6 +267,45 @@ async function stageDraft(input: EntityInput, entityId: string, dryRun: boolean)
   }
 }
 
+async function stageIcp(input: EntityInput, entityId: string) {
+  hr(`icp — ${input.name} (scores fit for open opportunities + proposed candidates)`);
+  const db = supabase();
+  const icp = await loadActiveIcp(db);
+  if (!icpIsMeaningful(icp)) {
+    console.error("No meaningful active ICP — set one via PUT /api/icp (or the ICP panel) first.");
+    process.exit(1);
+  }
+  console.log(`ICP: ${icp!.offering || "(no offering)"} | verticals: ${icp!.verticals.join(", ") || "—"} | buyers: ${icp!.buyer_roles.join(", ") || "—"}\n`);
+  const model = config.nebius.model;
+
+  const { data: opps } = await db
+    .from("opportunities")
+    .select("id, signal_type, score, insights(headline, summary, why_it_matters)")
+    .eq("entity_id", entityId)
+    .in("status", ["new", "contacted"]);
+
+  for (const o of (opps ?? []) as unknown as {
+    id: string; signal_type: string | null; score: number;
+    insights: { headline: string; summary: string | null; why_it_matters: string | null } | null;
+  }[]) {
+    const ins = o.insights;
+    const fit = await scoreIcpFit(nebius(), model, {
+      icp: icp!,
+      subject: {
+        name: input.name,
+        type: input.type,
+        signal_type: o.signal_type,
+        context: [ins?.headline, ins?.summary, ins?.why_it_matters].filter(Boolean).join(" — "),
+      },
+    });
+    const tier = computeHotness(fit.fit, o.score);
+    console.log(`  ${"🔥".repeat(tier)}${"·".repeat(5 - tier)}  fit ${fit.fit} · signal ${o.score} → ${hotnessLabel(tier, true)}`);
+    console.log(`     ${o.signal_type}: ${ins?.headline ?? o.id}`);
+    console.log(`     reason: ${fit.reason}\n`);
+  }
+  if (!opps?.length) console.log("  (no open opportunities for this entity)");
+}
+
 async function stageAll(input: EntityInput) {
   hr(`all — full cycle for ${input.name}`);
   const r = await runEntityCycle(input, "manual");
@@ -298,6 +344,8 @@ async function main() {
       return stageOpportunities(input, requireEntityId(id, only), dryRun);
     case "draft":
       return stageDraft(input, requireEntityId(id, only), dryRun);
+    case "icp":
+      return stageIcp(input, requireEntityId(id, only));
     case "all":
       return stageAll(input);
   }

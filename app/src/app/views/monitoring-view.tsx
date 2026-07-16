@@ -32,9 +32,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Pagination } from "@/app/components/pagination";
+import { Hotness } from "@/app/components/hotness";
 import type { MonitoringAccount } from "@/app/types";
 
 const ACCOUNTS_PER_PAGE = 3;
@@ -286,13 +286,7 @@ export function MonitoringView({
                       <Badge variant={urgencyVariant(account.urgency)}>{account.urgency}</Badge>
                     </div>
                     <div className="mt-4">
-                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span title="Average confidence of this account's quality-checked signals (0–100)">
-                          Signal confidence
-                        </span>
-                        <span>{account.score}</span>
-                      </div>
-                      <Progress value={account.score} />
+                      <Hotness tier={account.hotness} size="sm" />
                     </div>
                   </div>
                 ))}
@@ -391,6 +385,24 @@ export function MonitoringView({
                   <p className="text-xs leading-5 text-muted-foreground">
                     Add a URL to crawl for this account on every monitoring cycle.
                   </p>
+                  {(() => {
+                    const urlSources = (selectedAccount.source_urls ?? []).filter((s) => s.url);
+                    return urlSources.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {urlSources.map((s) => (
+                          <li key={s.id} className="flex items-center gap-2 rounded-md border bg-muted/40 px-2.5 py-1.5 text-xs">
+                            <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <a href={s.url ?? "#"} target="_blank" rel="noreferrer" className="truncate text-foreground hover:underline">
+                              {s.url}
+                            </a>
+                            {!s.enabled ? <Badge variant="outline" className="ml-auto shrink-0">paused</Badge> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs italic text-muted-foreground">No custom sources yet.</p>
+                    );
+                  })()}
                   <div className="flex gap-2">
                     <Input
                       placeholder="https://company.com/newsroom"

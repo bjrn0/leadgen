@@ -34,3 +34,23 @@ export async function triggerBootstrap(
   const handle = await tasks.trigger("bootstrap-entity", { record });
   return { id: handle.id };
 }
+
+/**
+ * Fire the Trigger.dev `discover-leads` task on demand, so a full ICP-driven
+ * discovery sweep runs now instead of waiting for the schedule. (The New Leads
+ * search box runs a single user query inline via /api/discover; this helper is for
+ * kicking off the broad background sweep.) Non-blocking; returns null when no
+ * worker is configured.
+ */
+export async function triggerDiscovery(): Promise<{ id: string } | null> {
+  if (!process.env.TRIGGER_SECRET_KEY) {
+    console.warn(
+      "[trigger] TRIGGER_SECRET_KEY not set — skipping discover-leads. " +
+        "Run `npx trigger.dev dev`, or `npm run discover-leads` locally.",
+    );
+    return null;
+  }
+  const { tasks } = await import("@trigger.dev/sdk");
+  const handle = await tasks.trigger("discover-leads", {});
+  return { id: handle.id };
+}

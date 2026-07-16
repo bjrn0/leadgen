@@ -1,6 +1,7 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase";
 import { triggerBootstrap } from "@/lib/trigger";
+import { seedSources } from "@pipeline/store";
 
 /**
  * Shared entity upsert + first-cycle bootstrap. Used by POST /api/entities
@@ -48,6 +49,22 @@ export async function upsertEntityAndBootstrap(
     .select("id, ingest_key")
     .single();
   if (error) throw new Error(error.message);
+
+  // Persist the custom sources NOW so they show in the monitoring account's source
+  // list immediately — otherwise they only appear after the first crawl runs
+  // seedSources(), which never happens if the worker is offline. Idempotent.
+  try {
+    await seedSources(data.id, {
+      type: input.type,
+      name: input.name,
+      ingest_key,
+      seed_urls: input.seed_urls,
+      cadence: input.cadence,
+      notifications: input.notifications,
+    });
+  } catch (err) {
+    console.error("[entities-server] seedSources failed:", (err as Error).message);
+  }
 
   // Fire the first cycle immediately. Non-fatal if the worker/secret is absent.
   let triggered: { id: string } | null = null;

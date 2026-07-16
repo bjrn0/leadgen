@@ -47,6 +47,30 @@ export function useAddCandidate() {
   });
 }
 
+export interface SearchResult {
+  query: string;
+  pagesSearched: number;
+  proposed: number;
+  found: { name: string; type: string; icp_fit: number; hotness: number; reason: string }[];
+}
+
+/** Run a user-typed lead search now; returns the leads found (added to New Leads). */
+export function useSearchLeads() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (query: string): Promise<SearchResult> =>
+      jsonOrThrow<SearchResult>(
+        await fetch("/api/discover", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ query }),
+        }),
+        "Search failed",
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["lead-candidates"] }),
+  });
+}
+
 /** Dismiss a discovered lead (it won't be re-proposed). */
 export function useDismissCandidate() {
   const qc = useQueryClient();

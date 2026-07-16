@@ -1,4 +1,17 @@
-export type ViewType = "lead-generation" | "monitoring";
+export type ViewType = "lead-generation" | "monitoring" | "settings";
+
+/** Runtime settings edited in the Settings view (mirrors the `settings` table). */
+export interface Settings {
+  monitoring_interval_hours: number;
+  discovery_interval_hours: number;
+  browserbase_fallback: boolean;
+  search_results_per_query: number;
+  min_lead_fit: number;
+  min_insight_confidence: number;
+  dedup_similarity_threshold: number;
+  min_classify_score: number;
+  last_discovery_at?: string | null;
+}
 
 /** One extracted signal as exposed by the v_monitoring_accounts view. */
 export interface MonitoringSignal {
@@ -10,13 +23,22 @@ export interface MonitoringSignal {
 }
 
 /** A watchlist account — the dashboard shape, straight from v_monitoring_accounts. */
+export interface MonitoringSource {
+  id: string;
+  url: string | null;
+  kind: string; // 'website' | 'firecrawl_search' | 'browserbase'
+  enabled: boolean;
+}
+
 export interface MonitoringAccount {
   id: string;
   name: string;
   tier: string;
   urgency: string;
   score: number;
+  hotness: number | null; // 1–5, max open-opportunity tier for the account
   sources: number;
+  source_urls: MonitoringSource[]; // the actual custom/seed sources, for the detail list
   latest: string | null; // ISO timestamp
   notifications: { email: boolean; webhook: boolean };
   summary: string | null;
@@ -50,7 +72,10 @@ export interface Opportunity {
   entity_id: string;
   insight_id: string;
   signal_type: string | null;
-  score: number;
+  score: number; // raw signal strength 0–100 (breakdown only)
+  icp_fit: number | null; // 0–100 LLM fit to the ICP
+  icp_fit_reason: string | null;
+  hotness: number | null; // 1–5, the user-facing ranking
   status: OpportunityStatus;
   why_now: string;
   suggested_action: string;
@@ -84,9 +109,27 @@ export interface LeadCandidate {
   evidence: { source_url: string; excerpt: string }[];
   status: LeadCandidateStatus;
   mention_count: number;
+  discovery_source: "mention" | "icp_search";
+  icp_fit: number | null;
+  icp_fit_reason: string | null;
+  hotness: number | null;
   first_seen_at: string;
   last_seen_at: string;
   source_entity_id: string | null;
   added_entity_id: string | null;
   source_entity: { name: string } | null;
+}
+
+/** The Ideal Customer Profile — what the user sells and who they target. */
+export interface IcpProfile {
+  id?: string;
+  name: string;
+  offering: string;
+  verticals: string[];
+  buyer_roles: string[];
+  company_sizes: string[];
+  regions: string[];
+  keywords: string[];
+  technologies: string[];
+  pain_themes: string[];
 }

@@ -124,3 +124,41 @@ export const DraftSchema = z.object({
   facts_used: z.array(z.string()),
 });
 export type Draft = z.infer<typeof DraftSchema>;
+
+// ---------------------------------------------------------------------------
+// ICP (Ideal Customer Profile) — what the user sells and who they target. The
+// anchor for ranking: the fit judge scores every opportunity/lead against it.
+// ---------------------------------------------------------------------------
+export const IcpProfileSchema = z.object({
+  name: z.string().default("Default ICP"),
+  offering: z.string().default(""),
+  verticals: z.array(z.string()).default([]),
+  buyer_roles: z.array(z.string()).default([]),
+  company_sizes: z.array(z.string()).default([]),
+  regions: z.array(z.string()).default([]),
+  keywords: z.array(z.string()).default([]),
+  technologies: z.array(z.string()).default([]),
+  pain_themes: z.array(z.string()).default([]),
+});
+export type IcpProfile = z.infer<typeof IcpProfileSchema>;
+
+// LLM fit judge output: how well a prospect matches the ICP, with a reason.
+export const IcpFitSchema = z.object({
+  fit: z.number().min(0).max(100),
+  reason: z.string(),
+});
+export type IcpFit = z.infer<typeof IcpFitSchema>;
+
+// ICP web-search discovery: companies/people named in a page that plausibly
+// match the ICP as outbound targets. evidence_excerpt is verbatim (checked in code).
+export const IcpMatchSchema = z.object({
+  name: z.string(),
+  type: z.enum(["person", "company"]),
+  reason: z.string(),
+  evidence_excerpt: z.string(),
+});
+export type IcpMatch = z.infer<typeof IcpMatchSchema>;
+
+export const IcpMatchesSchema = z.object({
+  matches: z.array(IcpMatchSchema).default([]),
+});

@@ -27,11 +27,12 @@ export async function GET(req: Request) {
   let q = supabaseAdmin()
     .from("lead_candidates")
     .select(
-      "id, name, type, relationship, reason, evidence, status, mention_count, " +
+      "id, name, type, relationship, reason, evidence, status, mention_count, discovery_source, icp_fit, icp_fit_reason, hotness, " +
         "first_seen_at, last_seen_at, source_entity_id, added_entity_id, " +
         "source_entity:entities!lead_candidates_source_entity_id_fkey(name)",
       { count: "exact" },
     )
+    .order("hotness", { ascending: false, nullsFirst: false })
     .order("last_seen_at", { ascending: false });
   if (status !== "all") q = q.eq("status", status);
 

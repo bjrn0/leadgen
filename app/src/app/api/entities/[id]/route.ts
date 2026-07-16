@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
+import { canonicalizeUrl } from "@pipeline/dedup";
 
 export const runtime = "nodejs";
 
@@ -57,10 +58,11 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     profile.seed_urls = [...urls];
 
     // Insert a sources row so the dashboard count bumps immediately; the pipeline's
-    // seedSources is idempotent, so a duplicate insert race is tolerated.
+    // seedSources is idempotent, so a duplicate insert race is tolerated. Canonicalize
+    // to match seedSources so the same URL added two ways doesn't create a visible dup.
     const { error: srcErr } = await db
       .from("sources")
-      .insert({ entity_id: id, kind: "website", url: parsed.add_seed_url });
+      .insert({ entity_id: id, kind: "website", url: canonicalizeUrl(parsed.add_seed_url) });
     if (srcErr && !/duplicate key/i.test(srcErr.message)) {
       return NextResponse.json({ error: srcErr.message }, { status: 500 });
     }

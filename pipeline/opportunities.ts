@@ -1,5 +1,7 @@
+import type OpenAI from "openai";
 import { supabase } from "./clients.js";
 import { config } from "./config.js";
+import { computeHotness, icpIsMeaningful, scoreIcpFit, type IcpRow } from "./icp.js";
 
 /**
  * Opportunity derivation — turns quality-ok, actionable insights into rows in the
@@ -71,6 +73,17 @@ export interface DerivedOpportunity {
   breakdown: ScoreBreakdown;
   why_now: string;
   suggested_action: string;
+  icp_fit: number | null;
+  icp_fit_reason: string | null;
+  hotness: number;
+}
+
+export interface DeriveOptions {
+  dryRun?: boolean;
+  /** Active ICP + client to score fit; omit to fall back to signal-only hotness. */
+  icp?: IcpRow | null;
+  icpClient?: OpenAI;
+  model?: string;
 }
 
 export interface DeriveResult {
@@ -86,15 +99,25 @@ export interface DeriveResult {
  */
 export async function deriveOpportunities(
   entityId: string,
-  opts: { dryRun?: boolean } = {},
+  opts: DeriveOptions = {},
 ): Promise<DeriveResult> {
   const db = supabase();
   const result: DeriveResult = { created: [], skipped: [] };
+  const scoreFit = opts.icpClient && opts.model && icpIsMeaningful(opts.icp);
+
+  // Entity identity for the fit judge (only needed when scoring).
+  let entityName = "";
+  let entityType = "";
+  if (scoreFit) {
+    const { data: ent } = await db.from("entities").select("name, type").eq("id", entityId).maybeSingle();
+    entityName = ent?.name ?? "";
+    entityType = ent?.type ?? "";
+  }
 
   const { data: insights, error: iErr } = await db
     .from("insights")
     .select(
-      "id, entity_id, signal_type, headline, why_it_matters, recommended_action, " +
+      "id, entity_id, signal_type, headline, summary, why_it_matters, recommended_action, " +
         "recency_label, confidence, urgency, published_at, created_at",
     )
     .eq("entity_id", entityId)
@@ -120,7 +143,7 @@ export async function deriveOpportunities(
   }
 
   const now = Date.now();
-  for (const insight of insights as unknown as (InsightForScore & { headline: string })[]) {
+  for (const insight of insights as unknown as (InsightForScore & { headline: string; summary: string | null })[]) {
     if (haveInsight.has(insight.id)) {
       result.skipped.push({ insight_id: insight.id, headline: insight.headline, reason: "already has opportunity" });
       continue;
@@ -136,6 +159,26 @@ export async function deriveOpportunities(
     }
 
     const breakdown = computeScore(insight);
+
+    // ICP fit (cached on the row). Reason is human-readable ("matches hardware
+    // mfg + VP Eng buyer"); hotness (1–5) is what the UI shows.
+    let icpFit: number | null = null;
+    let icpReason: string | null = null;
+    if (scoreFit) {
+      const fit = await scoreIcpFit(opts.icpClient!, opts.model!, {
+        icp: opts.icp!,
+        subject: {
+          name: entityName,
+          type: entityType,
+          signal_type: insight.signal_type,
+          context: [insight.headline, insight.summary, insight.why_it_matters].filter(Boolean).join(" — "),
+        },
+      });
+      icpFit = fit.fit;
+      icpReason = fit.reason;
+    }
+    const hotness = computeHotness(icpFit, breakdown.score);
+
     const derived: DerivedOpportunity = {
       insight_id: insight.id,
       entity_id: entityId,
@@ -144,6 +187,9 @@ export async function deriveOpportunities(
       breakdown,
       why_now: buildWhyNow(insight),
       suggested_action: insight.recommended_action?.trim() || "Review the signal and decide on outreach.",
+      icp_fit: icpFit,
+      icp_fit_reason: icpReason,
+      hotness,
     };
 
     if (!opts.dryRun) {
@@ -155,6 +201,9 @@ export async function deriveOpportunities(
           score: derived.score,
           why_now: derived.why_now,
           suggested_action: derived.suggested_action,
+          icp_fit: derived.icp_fit,
+          icp_fit_reason: derived.icp_fit_reason,
+          hotness: derived.hotness,
         },
         { onConflict: "insight_id", ignoreDuplicates: true },
       );

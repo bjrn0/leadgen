@@ -1,9 +1,12 @@
+import { nebius, supabase } from "./clients.js";
 import { collectPages } from "./crawl.js";
 import { config } from "./config.js";
 import { filterMentions, upsertCandidates } from "./discovery.js";
 import { classify, extract } from "./extract.js";
+import { loadActiveIcp } from "./icp.js";
 import { deriveOpportunities } from "./opportunities.js";
 import { gradeInsight } from "./quality.js";
+import { applyStoredSettings } from "./settings.js";
 import {
   finishRun,
   insertInsights,
@@ -62,6 +65,13 @@ export async function runEntityCycle(
   const runId = await startRun(entityId, trigger);
   const stats = emptyStats();
   let sample: CycleResult["sample"];
+
+  // Overlay the user's Settings (thresholds, engines) onto config for this run.
+  await applyStoredSettings(supabase());
+  // Load the active ICP once per cycle so opportunities and lead candidates get
+  // scored for fit as they're created (cached on the row).
+  const icp = await loadActiveIcp(supabase());
+  const icpOpts = { icp, icpClient: nebius(), model: config.nebius.model };
 
   try {
     const pages = await collectPages(input);
@@ -129,7 +139,7 @@ export async function runEntityCycle(
       if (mentions.length > 0) {
         const { kept, dropped } = filterMentions(input, page, mentions);
         for (const d of dropped) console.log(`        ↳ mention dropped: "${d.name}" — ${d.reason}`);
-        const { proposed } = await upsertCandidates(entityId, finding.findingId, page, kept);
+        const { proposed } = await upsertCandidates(entityId, finding.findingId, page, kept, icpOpts);
         stats.candidatesProposed += proposed;
         if (proposed > 0) console.log(`    + ${proposed} new lead candidate(s) proposed`);
       }
@@ -146,8 +156,9 @@ export async function runEntityCycle(
       }
     }
 
-    // Convert fresh ok-insights into ranked opportunities (deterministic, idempotent).
-    const derived = await deriveOpportunities(entityId);
+    // Convert fresh ok-insights into ranked opportunities (deterministic score,
+    // idempotent; ICP fit is the LLM-scored ranking overlay).
+    const derived = await deriveOpportunities(entityId, icpOpts);
     stats.opportunitiesCreated = derived.created.length;
     if (derived.created.length > 0) {
       console.log(

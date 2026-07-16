@@ -48,39 +48,47 @@ const MIN_CONTENT_CHARS = 200;
  * over discovery queries, plus direct Scrape of each seed URL. Any URL that
  * Firecrawl returns empty/blocked is retried through Browserbase.
  */
+/**
+ * Firecrawl search over a set of queries → deduped pages with markdown. Reused by
+ * both entity monitoring (collectPages) and ICP-driven lead discovery (icp-discovery.ts).
+ */
+export async function searchPages(queries: string[], limit: number): Promise<CrawledPage[]> {
+  const fc = firecrawl();
+  const byUrl = new Map<string, CrawledPage>();
+  for (const query of queries) {
+    try {
+      const res = await fc.search(query, {
+        limit,
+        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
+      });
+      for (const doc of res.data ?? []) {
+        const url = doc.url || doc.metadata?.sourceURL;
+        if (!url || byUrl.has(url)) continue;
+        const markdown = doc.markdown ?? "";
+        if (markdown.length < MIN_CONTENT_CHARS) continue;
+        byUrl.set(url, {
+          url,
+          title: doc.metadata?.title ?? null,
+          markdown,
+          publishedAt: metaPublishedAt(doc.metadata),
+          via: "firecrawl_search",
+        });
+      }
+    } catch (err) {
+      console.warn(`  [search] failed for "${query}": ${(err as Error).message}`);
+    }
+  }
+  return [...byUrl.values()];
+}
+
 export async function collectPages(entity: EntityInput): Promise<CrawledPage[]> {
   const fc = firecrawl();
   const byUrl = new Map<string, CrawledPage>();
   const failedUrls = new Set<string>();
 
   // 1) Discovery search
-  for (const query of buildQueries(entity)) {
-    try {
-      const res = await fc.search(query, {
-        limit: config.tuning.searchResultsPerQuery,
-        scrapeOptions: { formats: ["markdown"], onlyMainContent: true },
-      });
-      for (const doc of res.data ?? []) {
-        const url = doc.url || doc.metadata?.sourceURL;
-        if (!url) continue;
-        const markdown = doc.markdown ?? "";
-        if (markdown.length < MIN_CONTENT_CHARS) {
-          failedUrls.add(url);
-          continue;
-        }
-        if (!byUrl.has(url)) {
-          byUrl.set(url, {
-            url,
-            title: doc.metadata?.title ?? null,
-            markdown,
-            publishedAt: metaPublishedAt(doc.metadata),
-            via: "firecrawl_search",
-          });
-        }
-      }
-    } catch (err) {
-      console.warn(`  [crawl] search failed for "${query}": ${(err as Error).message}`);
-    }
+  for (const page of await searchPages(buildQueries(entity), config.tuning.searchResultsPerQuery)) {
+    if (!byUrl.has(page.url)) byUrl.set(page.url, page);
   }
 
   // 2) Seed URLs (owned sources) — direct scrape
@@ -106,7 +114,7 @@ export async function collectPages(entity: EntityInput): Promise<CrawledPage[]> 
   }
 
   // 3) Browserbase fallback for hard / JS-heavy pages Firecrawl couldn't read
-  if (config.browserbase.enabled) {
+  if (config.engines.browserbaseFallback) {
     for (const url of failedUrls) {
       if (byUrl.has(url)) continue;
       try {

@@ -175,8 +175,8 @@ export async function insertInsights(
     summary: insight.summary,
     why_it_matters: insight.why_it_matters,
     recommended_action: insight.recommended_action,
-    recency_label: relativeLabel(insight.evidence[0]?.published_at ?? classification.published_at),
-    published_at: classification.published_at,
+    recency_label: relativeLabel(safeTimestamp(insight.evidence[0]?.published_at ?? classification.published_at)),
+    published_at: safeTimestamp(classification.published_at),
     confidence: insight.confidence,
     urgency: insight.urgency,
     actionable: insight.actionable,
@@ -331,6 +331,21 @@ export async function listFindings(
   return (data ?? []) as StoredFinding[];
 }
 
+/** Most recent successful run finish time for an entity (cadence gating). */
+export async function lastSuccessfulRunAt(entityId: string): Promise<string | null> {
+  const { data, error } = await supabase()
+    .from("runs")
+    .select("finished_at")
+    .eq("entity_id", entityId)
+    .eq("status", "ok")
+    .not("finished_at", "is", null)
+    .order("finished_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.finished_at ?? null;
+}
+
 /** Used by the cron task: all enabled entities, reconstructed as EntityInput. */
 export async function listEnabledEntities(): Promise<EntityRow[]> {
   const { data, error } = await supabase()
@@ -354,6 +369,19 @@ export async function listEnabledEntities(): Promise<EntityRow[]> {
     });
     return { id: row.id, input };
   });
+}
+
+/**
+ * Coerce an LLM-provided date into a value Postgres will accept in a timestamptz
+ * column, or null. The classify/extract model sometimes emits the literal string
+ * "unknown" (bleeding over from the recency enum) or other non-date text, which
+ * would otherwise crash the whole cycle with "invalid input syntax for type
+ * timestamp with time zone".
+ */
+function safeTimestamp(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const t = new Date(v).getTime();
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
 function relativeLabel(iso: string | null): string {

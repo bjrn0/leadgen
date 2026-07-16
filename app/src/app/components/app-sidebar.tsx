@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, BrainCircuit, Search } from "lucide-react";
+import { Bell, BrainCircuit, Search, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -24,6 +24,11 @@ const items: NavBarItem[] = [
     title: "Monitoring",
     id: "monitoring",
     icon: Bell,
+  },
+  {
+    title: "Settings",
+    id: "settings",
+    icon: Settings,
   },
 ];
 

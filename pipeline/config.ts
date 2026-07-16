@@ -44,6 +44,9 @@ export const config = {
     projectId: process.env.BROWSERBASE_PROJECT_ID || "",
     enabled: Boolean(process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID),
   },
+  // `tuning` and `engines` hold env defaults; the Settings tab overlays DB values
+  // onto them each run via applyStoredSettings() (pipeline/settings.ts), so these
+  // are intentionally MUTABLE (no `as const`).
   tuning: {
     recencyWindowDays: num("RECENCY_WINDOW_DAYS", 45),
     dedupSimilarityThreshold: num("DEDUP_SIMILARITY_THRESHOLD", 0.92),
@@ -56,5 +59,12 @@ export const config = {
     opportunityDedupDays: num("OPPORTUNITY_DEDUP_DAYS", 7),
     // Drafts need some variation so Regenerate produces a different email.
     draftTemperature: num("DRAFT_TEMPERATURE", 0.4),
+    // ICP-fit floor for auto-discovered leads.
+    minLeadFit: num("MIN_LEAD_FIT", 40),
   },
-} as const;
+  engines: {
+    // Browserbase fallback for JS-heavy pages. Requires the env keys AND the
+    // Settings toggle; env presence is the default.
+    browserbaseFallback: Boolean(process.env.BROWSERBASE_API_KEY && process.env.BROWSERBASE_PROJECT_ID),
+  },
+};
