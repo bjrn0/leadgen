@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useMonitoring, useAddEntity, useUpdateEntity, type CreateEntityInput } from "@/lib/monitoring";
+import { useMonitoring, useAddEntity, useUpdateEntity, useEntityJobs, type CreateEntityInput } from "@/lib/monitoring";
 import { formatDateUTC } from "@/lib/format";
 import {
   Bell,
@@ -39,6 +39,7 @@ import type { MonitoringAccount } from "@/app/types";
 
 const ACCOUNTS_PER_PAGE = 3;
 const SIGNALS_PER_PAGE = 3;
+const ROLES_PER_PAGE = 10;
 
 function urgencyVariant(urgency: string) {
   if (urgency === "High") return "danger";
@@ -98,6 +99,7 @@ export function MonitoringView({
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [accountsPage, setAccountsPage] = useState(1);
   const [signalsPage, setSignalsPage] = useState(1);
+  const [rolesPage, setRolesPage] = useState(1);
   const [customSourceUrl, setCustomSourceUrl] = useState("");
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
   const [addForm, setAddForm] = useState<{ type: "company" | "person"; name: string; tier: string; sources: string; email: string; webhook: string }>({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
@@ -127,6 +129,7 @@ export function MonitoringView({
   // Evidence timeline pagination resets when switching accounts.
   useEffect(() => {
     setSignalsPage(1);
+    setRolesPage(1);
     setCustomSourceUrl("");
   }, [selectedAccount?.id]);
 
@@ -136,6 +139,15 @@ export function MonitoringView({
     (signalsPage - 1) * SIGNALS_PER_PAGE,
     signalsPage * SIGNALS_PER_PAGE,
   );
+
+  // Open roles for the selected account (job_postings). Only fetch when the view
+  // count says there are any, so accounts with none skip the request entirely.
+  const { data: openRoles = [], isLoading: rolesLoading } = useEntityJobs(
+    selectedAccount?.id ?? null,
+    (selectedAccount?.open_roles ?? 0) > 0,
+  );
+  const rolesPageCount = Math.max(1, Math.ceil(openRoles.length / ROLES_PER_PAGE));
+  const visibleRoles = openRoles.slice((rolesPage - 1) * ROLES_PER_PAGE, rolesPage * ROLES_PER_PAGE);
 
   async function handleAddAccount() {
     const input: CreateEntityInput = {
@@ -266,7 +278,9 @@ export function MonitoringView({
                           <Badge variant="outline">{account.tier}</Badge>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {account.sources} sources · latest {formatDateUTC(account.latest)}
+                          {account.sources} sources
+                          {account.open_roles > 0 ? ` · ${account.open_roles} open roles` : ""} · latest{" "}
+                          {formatDateUTC(account.latest)}
                         </div>
                         <div className="mt-3 flex items-center gap-2">
                           <NotificationToggle
@@ -303,7 +317,8 @@ export function MonitoringView({
                 <div>
                   <CardTitle>{selectedAccount.name} Intelligence Hub</CardTitle>
                   <CardDescription>
-                    {selectedAccount.tier} account · {selectedAccount.sources} tracked sources · latest signal {formatDateUTC(selectedAccount.latest, { withHour: true })}
+                    {selectedAccount.tier} account · {selectedAccount.sources} tracked sources
+                    {selectedAccount.open_roles > 0 ? ` · ${selectedAccount.open_roles} open roles` : ""} · latest signal {formatDateUTC(selectedAccount.latest, { withHour: true })}
                   </CardDescription>
                   <div className="mt-3 flex items-center gap-2">
                     <NotificationToggle
@@ -424,6 +439,52 @@ export function MonitoringView({
                   </div>
                 </div>
               </div>
+
+              {/* Open Roles — vacancies collected from careers surfaces (job_postings).
+                  Distinct from the summarized `hiring` signal in the timeline: this
+                  lists the individual open positions. Only rendered when there are any. */}
+              {selectedAccount.open_roles > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <BriefcaseBusiness className="h-4 w-4 text-[var(--brand)]" />
+                    Open Roles
+                    <Badge variant="outline">{selectedAccount.open_roles}</Badge>
+                  </div>
+                  {rolesLoading && openRoles.length === 0 ? (
+                    <p className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+                      Loading open roles…
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {visibleRoles.map((role) => (
+                        <li key={role.id} className="rounded-md border bg-background p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              {role.url ? (
+                                <a href={role.url} target="_blank" rel="noreferrer" className="font-medium hover:underline">
+                                  {role.title}
+                                </a>
+                              ) : (
+                                <span className="font-medium">{role.title}</span>
+                              )}
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                {role.department ? <Badge variant="outline">{role.department}</Badge> : null}
+                                {role.location ? <Badge variant="secondary">{role.location}</Badge> : null}
+                                {role.remote ? <Badge variant="secondary">Remote</Badge> : null}
+                                {role.employment_type ? <Badge variant="outline">{role.employment_type}</Badge> : null}
+                              </div>
+                            </div>
+                            {role.posted_at ? (
+                              <span className="shrink-0 text-xs text-muted-foreground">{formatDateUTC(role.posted_at)}</span>
+                            ) : null}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Pagination page={rolesPage} pageCount={rolesPageCount} onChange={setRolesPage} />
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>

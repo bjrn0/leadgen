@@ -81,49 +81,53 @@ export async function searchPages(queries: string[], limit: number): Promise<Cra
   return [...byUrl.values()];
 }
 
-export async function collectPages(entity: EntityInput): Promise<CrawledPage[]> {
+/**
+ * Scrape a single URL to markdown: Firecrawl first, Browserbase fallback for
+ * hard / JS-heavy pages Firecrawl returns empty/blocked. Returns null if neither
+ * yields usable content. Reused by seed-URL crawling and careers-page collection
+ * (pipeline/jobs.ts).
+ */
+export async function scrapePageWithFallback(url: string): Promise<CrawledPage | null> {
   const fc = firecrawl();
+  try {
+    const doc = await fc.scrapeUrl(url, { formats: ["markdown"], onlyMainContent: true });
+    if (doc.success && (doc.markdown ?? "").length >= MIN_CONTENT_CHARS) {
+      return {
+        url,
+        title: doc.metadata?.title ?? null,
+        markdown: doc.markdown ?? "",
+        publishedAt: metaPublishedAt(doc.metadata),
+        via: "firecrawl_scrape",
+      };
+    }
+  } catch (err) {
+    console.warn(`  [crawl] scrape failed for ${url}: ${(err as Error).message}`);
+  }
+
+  if (config.engines.browserbaseFallback) {
+    try {
+      const page = await browserbaseFetch(url);
+      if (page && page.markdown.length >= MIN_CONTENT_CHARS) return page;
+    } catch (err) {
+      console.warn(`  [crawl] browserbase fallback failed for ${url}: ${(err as Error).message}`);
+    }
+  }
+  return null;
+}
+
+export async function collectPages(entity: EntityInput): Promise<CrawledPage[]> {
   const byUrl = new Map<string, CrawledPage>();
-  const failedUrls = new Set<string>();
 
   // 1) Discovery search
   for (const page of await searchPages(buildQueries(entity), config.tuning.searchResultsPerQuery)) {
     if (!byUrl.has(page.url)) byUrl.set(page.url, page);
   }
 
-  // 2) Seed URLs (owned sources) — direct scrape
+  // 2) Seed URLs (owned sources) — direct scrape with Browserbase fallback
   for (const url of entity.seed_urls) {
     if (byUrl.has(url)) continue;
-    try {
-      const doc = await fc.scrapeUrl(url, { formats: ["markdown"], onlyMainContent: true });
-      if (doc.success && (doc.markdown ?? "").length >= MIN_CONTENT_CHARS) {
-        byUrl.set(url, {
-          url,
-          title: doc.metadata?.title ?? null,
-          markdown: doc.markdown ?? "",
-          publishedAt: metaPublishedAt(doc.metadata),
-          via: "firecrawl_scrape",
-        });
-      } else {
-        failedUrls.add(url);
-      }
-    } catch (err) {
-      console.warn(`  [crawl] scrape failed for ${url}: ${(err as Error).message}`);
-      failedUrls.add(url);
-    }
-  }
-
-  // 3) Browserbase fallback for hard / JS-heavy pages Firecrawl couldn't read
-  if (config.engines.browserbaseFallback) {
-    for (const url of failedUrls) {
-      if (byUrl.has(url)) continue;
-      try {
-        const page = await browserbaseFetch(url);
-        if (page && page.markdown.length >= MIN_CONTENT_CHARS) byUrl.set(url, page);
-      } catch (err) {
-        console.warn(`  [crawl] browserbase fallback failed for ${url}: ${(err as Error).message}`);
-      }
-    }
+    const page = await scrapePageWithFallback(url);
+    if (page) byUrl.set(url, page);
   }
 
   return [...byUrl.values()];
