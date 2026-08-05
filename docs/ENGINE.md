@@ -172,8 +172,10 @@ without writing.
 
 ## 5. Deployment
 
-1. **Database**: apply `supabase/migrations/0001_init.sql` then `0002_leadgen.sql` (Supabase SQL
-   editor or `psql`).
+1. **Database**: apply the migrations in `supabase/migrations/` in order —
+   `0001_init.sql` → `0002_leadgen.sql` → `0003_icp.sql` → `0004_icp_discovery.sql`
+   → `0005_settings.sql` → `0006_jobs.sql` (Supabase SQL editor or `psql`). They are
+   idempotent, so re-applying is safe.
 2. **Engine**: `npx trigger.dev@latest deploy` (uses `trigger.config.ts`; set `TRIGGER_PROJECT_REF`).
    This deploys both `bootstrap-entity` (per-entity) and `monitor-cycle` (hourly cron).
 3. **Dashboard**: deploy the `app` workspace (e.g. Vercel) with `NEXT_PUBLIC_SUPABASE_URL`,

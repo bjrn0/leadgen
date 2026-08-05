@@ -4,13 +4,17 @@ import { config } from "./config.js";
 import { filterMentions, upsertCandidates } from "./discovery.js";
 import { classify, extract } from "./extract.js";
 import { loadActiveIcp } from "./icp.js";
+import { collectJobs, insertHiringInsight, upsertJobPostings, type CollectedJob } from "./jobs.js";
 import { deriveOpportunities } from "./opportunities.js";
 import { gradeInsight } from "./quality.js";
+import { detectAtsSource, resolveCareersSurfaces } from "./resolve.js";
 import { applyStoredSettings } from "./settings.js";
 import {
   finishRun,
   insertInsights,
+  loadCareersSources,
   processFinding,
+  seedJobSource,
   seedSources,
   startRun,
   upsertEntity,
@@ -28,6 +32,8 @@ export interface CycleStats {
   filtered: number; // dropped by classification before extraction
   opportunitiesCreated: number; // derived into the lead-gen queue
   candidatesProposed: number; // new-lead discovery proposals
+  jobsOpened: number; // newly-detected open roles from careers surfaces
+  jobsClosed: number; // roles that disappeared from careers surfaces
 }
 
 export interface CycleResult {
@@ -49,6 +55,8 @@ const emptyStats = (): CycleStats => ({
   filtered: 0,
   opportunitiesCreated: 0,
   candidatesProposed: 0,
+  jobsOpened: 0,
+  jobsClosed: 0,
 });
 
 /**
@@ -154,6 +162,49 @@ export async function runEntityCycle(
           };
         }
       }
+    }
+
+    // Job-vacancy collection: pull structured open roles from every registered
+    // careers surface (ATS API or scrape+extract), merge, upsert with diff-close,
+    // and emit newly-opened roles as one 'hiring' insight so the opportunity
+    // derivation below picks them up. Self-contained so Phase 2 can move it out.
+    let careersSources = await loadCareersSources(entityId);
+    // Lazy careers-surface resolution: an entity added outside the app (seeded,
+    // migrated, or created before vacancies existed) has no registered careers
+    // source, so collection would silently no-op. Resolve + register on the first
+    // cycle that finds none, so monitor-cycle is self-sufficient regardless of how
+    // the entity got into the DB. Same guardrails as entities-server: company-only,
+    // non-fatal, low-confidence resolves to no source (never crawl the wrong
+    // company's jobs).
+    if (careersSources.length === 0 && input.type === "company") {
+      try {
+        const resolved = await resolveCareersSurfaces(nebius(), config.nebius.model, input.name);
+        for (const surface of resolved?.surfaces ?? []) await seedJobSource(entityId, surface.url);
+        if (resolved?.surfaces.length) careersSources = await loadCareersSources(entityId);
+      } catch (err) {
+        console.warn(`    [jobs] careers resolution failed for ${input.name}: ${(err as Error).message}`);
+      }
+    }
+    if (careersSources.length > 0) {
+      const collected: CollectedJob[] = [];
+      for (const src of careersSources) {
+        try {
+          const jobs = await collectJobs({ url: src.url, source: detectAtsSource(src.url) }, {
+            client: nebius(),
+            model: config.nebius.model,
+          });
+          collected.push(...jobs);
+        } catch (err) {
+          console.warn(`    [jobs] collection failed for ${src.url}: ${(err as Error).message}`);
+        }
+      }
+      const { opened, closed, total } = await upsertJobPostings(entityId, collected);
+      stats.jobsOpened = opened.length;
+      stats.jobsClosed = closed;
+      if (opened.length > 0) await insertHiringInsight(entityId, opened);
+      console.log(
+        `    ⚑ jobs — ${total} open role(s), ${opened.length} new, ${closed} closed`,
+      );
     }
 
     // Convert fresh ok-insights into ranked opportunities (deterministic score,

@@ -26,7 +26,7 @@ contract the dashboard reads, and the Next.js plumbing that's already wired for 
    in [docs/ENGINE.md §4](docs/ENGINE.md)). The Next.js app reads its own copy from `app/.env.local`
    (`NEXT_PUBLIC_SUPABASE_URL`, `DATABASE_SECRET_KEY`, `TRIGGER_SECRET_KEY`).
 2. Install dependencies with `npm install`.
-3. Apply the schema: `supabase/migrations/0001_init.sql` (Supabase SQL editor or `psql`).
+3. Apply the schema: every file in `supabase/migrations/` in order (`0001_init.sql` … `0006_jobs.sql`) via the Supabase SQL editor or `psql`.
 4. Run the engine worker: `npx trigger.dev@latest dev` (repo root).
 5. Start the dashboard: `npm run dev --workspace app`.
 

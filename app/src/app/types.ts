@@ -38,11 +38,26 @@ export interface MonitoringAccount {
   score: number;
   hotness: number | null; // 1–5, max open-opportunity tier for the account
   sources: number;
+  open_roles: number; // currently-open job vacancies collected from careers surfaces
   source_urls: MonitoringSource[]; // the actual custom/seed sources, for the detail list
   latest: string | null; // ISO timestamp
   notifications: { email: boolean; webhook: boolean };
   summary: string | null;
   signals: MonitoringSignal[];
+}
+
+/** An open role collected from a careers surface (job_postings), for the Open Roles panel. */
+export interface JobPosting {
+  id: string;
+  title: string;
+  department: string | null;
+  location: string | null;
+  remote: boolean | null;
+  seniority: string | null;
+  employment_type: string | null;
+  url: string | null;
+  posted_at: string | null;
+  status: "open" | "closed";
 }
 
 export type OpportunityStatus = "new" | "contacted" | "qualified" | "dismissed";

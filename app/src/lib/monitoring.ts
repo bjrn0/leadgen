@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { MonitoringAccount } from "@/app/types";
+import type { JobPosting, MonitoringAccount } from "@/app/types";
 
 /** Read the watchlist. Pass a poll interval (ms) to refetch while a run is in flight. */
 export function useMonitoring(refetchInterval: number | false = false) {
@@ -13,6 +13,23 @@ export function useMonitoring(refetchInterval: number | false = false) {
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to load monitoring");
       const json = (await res.json()) as { accounts: MonitoringAccount[] };
       return json.accounts ?? [];
+    },
+  });
+}
+
+/**
+ * Open roles for one account (job_postings). Powers the Open Roles panel; pass
+ * `enabled` false to skip the fetch for accounts that have no open roles.
+ */
+export function useEntityJobs(entityId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["entity-jobs", entityId],
+    enabled: Boolean(entityId) && enabled,
+    queryFn: async (): Promise<JobPosting[]> => {
+      const res = await fetch(`/api/entities/${entityId}/jobs`);
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to load open roles");
+      const json = (await res.json()) as { jobs: JobPosting[] };
+      return json.jobs ?? [];
     },
   });
 }

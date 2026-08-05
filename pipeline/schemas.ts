@@ -162,3 +162,42 @@ export type IcpMatch = z.infer<typeof IcpMatchSchema>;
 export const IcpMatchesSchema = z.object({
   matches: z.array(IcpMatchSchema).default([]),
 });
+
+// ---------------------------------------------------------------------------
+// Company identity resolution — a freshly-added lead is created from its name
+// only (seed_urls empty), so before we can collect vacancies we must resolve the
+// company's official domain + careers surface(s) from the open web. Grounded like
+// evidence: evidence_excerpt must be a verbatim substring of a fetched page, and
+// a confidence floor gates registration (a wrong domain would track another
+// company's jobs — the worst failure mode).
+// ---------------------------------------------------------------------------
+export const CompanyIdentitySchema = z.object({
+  website: z.string().nullable(),
+  careers_urls: z.array(z.string()).default([]), // own /careers and/or ATS board
+  confidence: z.number().min(0).max(1),
+  evidence_excerpt: z.string(), // VERBATIM substring proving the domain
+});
+export type CompanyIdentity = z.infer<typeof CompanyIdentitySchema>;
+
+// ---------------------------------------------------------------------------
+// Job postings — structured open roles collected from a careers surface. The
+// ATS-API path (Greenhouse/Lever) maps its payload onto the same shape; the
+// scrape+LLM path returns this directly (evidence_excerpt checked verbatim in
+// code, same anti-fabrication rule as IcpMatch).
+// ---------------------------------------------------------------------------
+export const JobPostingSchema = z.object({
+  title: z.string().min(1),
+  department: z.string().nullable(),
+  location: z.string().nullable(),
+  remote: z.boolean().nullable(),
+  seniority: z.string().nullable(),
+  employment_type: z.string().nullable(),
+  url: z.string().nullable(),
+  posted_at: z.string().nullable(),
+  evidence_excerpt: z.string(),
+});
+export type JobPosting = z.infer<typeof JobPostingSchema>;
+
+export const JobPostingsSchema = z.object({
+  jobs: z.array(JobPostingSchema).default([]),
+});

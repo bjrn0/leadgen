@@ -76,6 +76,46 @@ export async function seedSources(entityId: string, input: EntityInput): Promise
   }
 }
 
+/**
+ * Register a careers surface (own /careers page or ATS board) as a 'careers'
+ * source for the entity. Idempotent select-then-insert, mirroring seedSources.
+ * `source` records which collection path applies (greenhouse/lever/careers).
+ */
+export async function seedJobSource(entityId: string, rawUrl: string): Promise<void> {
+  const db = supabase();
+  const url = canonicalizeUrl(rawUrl);
+  const { data: existing, error: selErr } = await db
+    .from("sources")
+    .select("id")
+    .eq("entity_id", entityId)
+    .eq("kind", "careers")
+    .eq("url", url)
+    .maybeSingle();
+  if (selErr) throw selErr;
+  if (existing) return;
+
+  const { error } = await db.from("sources").insert({ entity_id: entityId, kind: "careers", url });
+  // Tolerate a race where a concurrent run inserted the same source first.
+  if (error && !/duplicate key/i.test(error.message)) throw error;
+}
+
+export interface CareersSourceRow {
+  id: string;
+  url: string;
+}
+
+/** Load the entity's registered careers sources (kind='careers', enabled). */
+export async function loadCareersSources(entityId: string): Promise<CareersSourceRow[]> {
+  const { data, error } = await supabase()
+    .from("sources")
+    .select("id, url")
+    .eq("entity_id", entityId)
+    .eq("kind", "careers")
+    .eq("enabled", true);
+  if (error) throw error;
+  return (data ?? []).filter((r): r is CareersSourceRow => Boolean(r.url));
+}
+
 export interface FindingResult {
   findingId: string;
   status: "new" | "changed" | "duplicate";
