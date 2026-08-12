@@ -14,6 +14,7 @@ import {
   Newspaper,
   Plus,
   Radio,
+  Search,
   Sparkles,
   Target,
   UserPlus,
@@ -97,9 +98,11 @@ export function MonitoringView({
   const updateEntity = useUpdateEntity();
 
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [watchlistQuery, setWatchlistQuery] = useState("");
   const [accountsPage, setAccountsPage] = useState(1);
   const [signalsPage, setSignalsPage] = useState(1);
   const [rolesPage, setRolesPage] = useState(1);
+  const [rolesQuery, setRolesQuery] = useState("");
   const [customSourceUrl, setCustomSourceUrl] = useState("");
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
   const [addForm, setAddForm] = useState<{ type: "company" | "person"; name: string; tier: string; sources: string; email: string; webhook: string }>({ type: "company", name: "", tier: "Strategic", sources: "", email: "", webhook: "" });
@@ -116,20 +119,40 @@ export function MonitoringView({
     }
   }, [isAddAccountOpen]);
 
-  const accountsPageCount = Math.max(1, Math.ceil(accounts.length / ACCOUNTS_PER_PAGE));
+  // Name search over the watchlist. Filtering resets pagination so results
+  // always start on page 1.
+  const filteredAccounts = useMemo(() => {
+    const q = watchlistQuery.trim().toLowerCase();
+    if (!q) return accounts;
+    return accounts.filter((account) => account.name.toLowerCase().includes(q));
+  }, [accounts, watchlistQuery]);
+
+  const accountsPageCount = Math.max(1, Math.ceil(filteredAccounts.length / ACCOUNTS_PER_PAGE));
+  // Clamp during render: when a search shrinks the result set, `accountsPage`
+  // may still point past the last page. Deriving the effective page here (rather
+  // than resetting via an effect that runs after render) avoids a frame where
+  // the slice is out of range and the list looks empty.
+  const accountsPageSafe = Math.min(accountsPage, accountsPageCount);
   const visibleAccounts = useMemo(
-    () => accounts.slice((accountsPage - 1) * ACCOUNTS_PER_PAGE, accountsPage * ACCOUNTS_PER_PAGE),
-    [accounts, accountsPage],
+    () => filteredAccounts.slice((accountsPageSafe - 1) * ACCOUNTS_PER_PAGE, accountsPageSafe * ACCOUNTS_PER_PAGE),
+    [filteredAccounts, accountsPageSafe],
   );
 
-  // Selection survives page flips; falls back to the first visible account.
+  // The detail pane follows the search: if the selected company is filtered out,
+  // show the first matching company instead, so the news below always reflect a
+  // company that's actually visible in the list. When nothing matches it stays
+  // null and the pane shows a placeholder (see below) rather than an unrelated
+  // company's news.
   const selectedAccount: MonitoringAccount | null =
-    accounts.find((account) => account.id === selectedAccountId) ?? visibleAccounts[0] ?? null;
+    filteredAccounts.find((account) => account.id === selectedAccountId) ??
+    filteredAccounts[0] ??
+    null;
 
   // Evidence timeline pagination resets when switching accounts.
   useEffect(() => {
     setSignalsPage(1);
     setRolesPage(1);
+    setRolesQuery("");
     setCustomSourceUrl("");
   }, [selectedAccount?.id]);
 
@@ -146,8 +169,16 @@ export function MonitoringView({
     selectedAccount?.id ?? null,
     (selectedAccount?.open_roles ?? 0) > 0,
   );
-  const rolesPageCount = Math.max(1, Math.ceil(openRoles.length / ROLES_PER_PAGE));
-  const visibleRoles = openRoles.slice((rolesPage - 1) * ROLES_PER_PAGE, rolesPage * ROLES_PER_PAGE);
+  // Title search over the open roles. Filtering resets pagination via the
+  // clamped effective page below so results always start on page 1.
+  const filteredRoles = useMemo(() => {
+    const q = rolesQuery.trim().toLowerCase();
+    if (!q) return openRoles;
+    return openRoles.filter((role) => role.title?.toLowerCase().includes(q));
+  }, [openRoles, rolesQuery]);
+  const rolesPageCount = Math.max(1, Math.ceil(filteredRoles.length / ROLES_PER_PAGE));
+  const rolesPageSafe = Math.min(rolesPage, rolesPageCount);
+  const visibleRoles = filteredRoles.slice((rolesPageSafe - 1) * ROLES_PER_PAGE, rolesPageSafe * ROLES_PER_PAGE);
 
   async function handleAddAccount() {
     const input: CreateEntityInput = {
@@ -236,7 +267,7 @@ export function MonitoringView({
         </div>
       ) : null}
 
-      {accounts.length > 0 && selectedAccount ? (
+      {accounts.length > 0 ? (
       <div className="grid gap-6 xl:grid-cols-[0.34fr_0.66fr]">
         <div>
           <Card>
@@ -250,7 +281,22 @@ export function MonitoringView({
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="pl-8"
+                  placeholder="Search by name…"
+                  value={watchlistQuery}
+                  onChange={(e) => setWatchlistQuery(e.target.value)}
+                  aria-label="Search watchlist by name"
+                />
+              </div>
               <div className="space-y-3">
+                {visibleAccounts.length === 0 ? (
+                  <p className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+                    No accounts match “{watchlistQuery}”.
+                  </p>
+                ) : null}
                 {visibleAccounts.map((account) => (
                   // div+role, not <button>: the notification toggles inside are
                   // buttons themselves, and buttons cannot nest.
@@ -305,12 +351,13 @@ export function MonitoringView({
                   </div>
                 ))}
               </div>
-              <Pagination page={accountsPage} pageCount={accountsPageCount} onChange={setAccountsPage} />
+              <Pagination page={accountsPageSafe} pageCount={accountsPageCount} onChange={setAccountsPage} />
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-6">
+          {selectedAccount ? (
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -450,9 +497,23 @@ export function MonitoringView({
                     Open Roles
                     <Badge variant="outline">{selectedAccount.open_roles}</Badge>
                   </div>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      className="pl-8"
+                      placeholder="Search roles by title…"
+                      value={rolesQuery}
+                      onChange={(e) => setRolesQuery(e.target.value)}
+                      aria-label="Search open roles by title"
+                    />
+                  </div>
                   {rolesLoading && openRoles.length === 0 ? (
                     <p className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
                       Loading open roles…
+                    </p>
+                  ) : visibleRoles.length === 0 ? (
+                    <p className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+                      No roles match “{rolesQuery}”.
                     </p>
                   ) : (
                     <ul className="space-y-2">
@@ -482,11 +543,20 @@ export function MonitoringView({
                       ))}
                     </ul>
                   )}
-                  <Pagination page={rolesPage} pageCount={rolesPageCount} onChange={setRolesPage} />
+                  <Pagination page={rolesPageSafe} pageCount={rolesPageCount} onChange={setRolesPage} />
                 </div>
               ) : null}
             </CardContent>
           </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex h-64 flex-col items-center justify-center gap-2 text-center text-muted-foreground">
+                <Search className="h-5 w-5" />
+                <p>No company matches “{watchlistQuery}”.</p>
+                <p className="text-sm">Adjust the search to see a company’s intelligence hub.</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
       ) : null}
